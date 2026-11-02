@@ -16,10 +16,52 @@ diagram's client tint, and the chart series. Everything else stays Praisindo's.
 | `batavia` | Batavia Prosperindo Aset Manajemen | `#002878` |
 | `maybank-am` | Maybank Asset Management | `#ffc600`, `#373737` |
 | `ocbc-sekuritas` | OCBC Sekuritas | `#e32028` |
+| `mandiri` | Bank Mandiri | `#003d79`, `#ffb700` |
+| `bri` | BRI | `#0857c3` |
+| `bca` | BCA | `#0f60ad` |
+| `bni` | BNI | `#006885`, `#f15a22` |
+| `bsi` | BSI | `#00a39d`, `#f8ad3c` |
+| `ocbc` | OCBC | `#e30613`, `#b10615` |
+| `danamon` | Danamon | `#f15a22`, `#004d43` |
+| `permata` | Permata Bank | `#0064ff`, `#002850` |
+| `danareksa-im` | Danareksa Investments | `#0032a0` |
+| `manulife-am` | Manulife Investments | `#00a758`, `#282b3e` |
+| `bahana-tcw` | Bahana TCW | `#d7181f` |
+| `sucor-am` | Sucor Asset Management | `#3a5896` |
+| `syailendra` | Syailendra Capital | `#f06432`, `#55554b` |
+| `sinarmas-am` | Sinarmas Asset Management | `#ed1c25` |
+| `ashmore` | Ashmore | `#00305d`, `#00a8dd` |
+| `eastspring` | Eastspring Investments | `#ed1b2e`, `#68727a` |
 
-The palettes are the institutions' theme presets in WMS-IMS Ultimate
-(`src/data/seeds/institution-presets.ts` there). Keep them in step. OCBC Sekuritas has no preset
-there yet; its logo and red come from ocbcsekuritas.com.
+The palettes of the first seven are the institutions' theme presets in WMS-IMS Ultimate
+(`src/data/seeds/institution-presets.ts` there). Keep them in step. The others have no preset
+there yet; their branding comes from public sources, below.
+
+### Public branding sources (November 2026)
+
+The largest Indonesian banks (by total assets, June 2026) and investment managers (by mutual fund
+assets, September 2026) not covered by presets. Colours marked "logo" are the logo file's own
+fills; confirm them with the institution before they matter.
+
+| Id | Logo | Colours | Notes |
+| --- | --- | --- | --- |
+| `ocbc-sekuritas` | ocbcsekuritas.com header | logo | |
+| `mandiri` | Wikimedia Commons, Bank_Mandiri_logo_2016.svg | Mandiri brand guideline | Dark version: wordmark reversed to white, as the guideline's inverse logo |
+| `bri` | Commons, BRI_2025.svg (the December 2025 logo) | logo | Drawn white on dark |
+| `bca` | pustaka.bca.co.id logo-bca.svg and logo-bca-white.svg | logo | |
+| `bni` | Commons, Bank_Negara_Indonesia_logo_(2004).svg | logo | Dark version: wordmark reversed to white |
+| `bsi` | Commons, Bank_Syariah_Indonesia.svg | logo | |
+| `ocbc` | Commons, Logo-ocbc.svg (the 2023 OCBC logo) | ocbc.id logo and site | Drawn white on dark |
+| `danamon` | danamon.co.id header (2024 logo, member of MUFG) | logo | A rename to MUFG Danamon is proposed for 2027. Dark version: wordmark and byline reversed to white |
+| `permata` | Commons, Permata_Bank_(2024).svg (the lotus logo) | logo and site | Dark version: wordmark reversed to white |
+| `danareksa-im` | none published yet (merger of 1 October 2026) | danareksainvestments.com site | Named in text |
+| `manulife-am` | manulifeim.co.id symbol and wordmark, set side by side | site | |
+| `bahana-tcw` | bahanatcw.com colour PNG and white SVG | logo | |
+| `sucor-am` | sucorinvestam.com logo.svg, cropped to the artwork | logo | Drawn white on dark |
+| `syailendra` | syailendracapital.com logo-footer.svg | logo | Light version: the white wordmark drawn in the logo's grey |
+| `sinarmas-am` | sinarmas-am.co.id header PNG (for dark backgrounds) | logo | Light version: the white wordmark drawn in black; replace with an official file when available |
+| `ashmore` | ashmoregroup.com logo.svg | logo | Dark version: wordmark reversed to white |
+| `eastspring` | eastspring.com logo_id.png | logo and site | Drawn white on dark |
 
 ## Adding a client
 

@@ -10,7 +10,11 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const build = (...args) => execFileSync(process.execPath, [path.join(root, "engine/build.mjs"), ...args], { stdio: "inherit", cwd: root });
-const CLIENTS = ["praisindo", "cimb-niaga", "nobu-bank", "btn", "trimegah-am", "batavia", "maybank-am", "ocbc-sekuritas"];
+const CLIENTS = [
+  "praisindo", "cimb-niaga", "nobu-bank", "btn", "trimegah-am", "batavia", "maybank-am", "ocbc-sekuritas",
+  "mandiri", "bri", "bca", "bni", "bsi", "ocbc", "danamon", "permata",
+  "danareksa-im", "manulife-am", "bahana-tcw", "sucor-am", "syailendra", "sinarmas-am", "ashmore", "eastspring",
+];
 
 build("decks/consolidated-wealth-statement-cimb-niaga", "--pptx");
 for (const client of CLIENTS) build("decks/starter", "--pptx", "--client", client);

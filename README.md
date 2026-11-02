@@ -12,9 +12,10 @@ assets, and a Claude Code plugin that packages all of it as the `praisindo-slide
   footer with classification, client, date and page number; a dark cover and closing slide in the
   client's colours.
 - The Praisindo design system's look: Libre Franklin, light paper, hairline cards and tables.
-- The client's brand applied for you (CIMB Niaga, Nobu Bank, Bank BTN, Trimegah AM, Batavia,
-  Maybank AM, OCBC Sekuritas, or Praisindo alone), and the same deck rebuildable for another
-  client in one command.
+- The client's brand applied for you: 24 clients, including the largest Indonesian banks (Bank
+  Mandiri, BRI, BCA, BNI, BTN, BSI, CIMB Niaga, OCBC, Danamon, Permata) and investment managers
+  (Trimegah, Manulife, Bahana TCW, Batavia, Sucor, Syailendra and others), or Praisindo alone; the
+  list is in `guides/clients.md`. The same deck can be rebuilt for another client in one command.
 - A check that every slide fits on one page, previews and contact sheets for review, a PDF, and a
   PowerPoint file with live slide numbers and a framed layout for adding slides by hand.
 

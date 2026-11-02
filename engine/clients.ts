@@ -126,6 +126,146 @@ export const CLIENTS = {
     whiteOnDark: true,
     palette: { primary: "#e32028", secondary: null, dark: { background: "#160a0b", surface: "#201012", text: "#f8f1f1", secondary: "#e8676b" } },
   },
+
+  /*
+   * The largest banks and investment managers in Indonesia, without presets in WMS-IMS Ultimate
+   * yet. Logos from each institution's website or Wikimedia Commons (November 2026); reversed and
+   * light versions made here are noted per client. Sources are listed in guides/clients.md.
+   */
+  mandiri: {
+    id: "mandiri",
+    name: "Bank Mandiri",
+    legalName: "PT Bank Mandiri (Persero) Tbk",
+    logos: { light: "brand/clients/mandiri/logo-light.svg", dark: "brand/clients/mandiri/logo-dark.svg" },
+    logoHeight: 14,
+    palette: { primary: "#003d79", secondary: "#ffb700", dark: { background: "#070e17", surface: "#0d1622", text: "#eff1f6", secondary: "#ffb700" } },
+  },
+  bri: {
+    id: "bri",
+    name: "BRI",
+    legalName: "PT Bank Rakyat Indonesia (Persero) Tbk",
+    logos: { light: "brand/clients/bri/logo.svg", dark: "brand/clients/bri/logo.svg" },
+    logoHeight: 12,
+    whiteOnDark: true,
+    palette: { primary: "#0857c3", secondary: null, dark: { background: "#08101d", surface: "#0e192a", text: "#eff2f8", secondary: "#4681d2" } },
+  },
+  bca: {
+    id: "bca",
+    name: "BCA",
+    legalName: "PT Bank Central Asia Tbk",
+    logos: { light: "brand/clients/bca/logo-light.svg", dark: "brand/clients/bca/logo-dark.svg" },
+    logoHeight: 19,
+    palette: { primary: "#0f60ad", secondary: null, dark: { background: "#09111b", surface: "#0f1a28", text: "#eff2f8", secondary: "#4b88c2" } },
+  },
+  bni: {
+    id: "bni",
+    name: "BNI",
+    legalName: "PT Bank Negara Indonesia (Persero) Tbk",
+    logos: { light: "brand/clients/bni/logo-light.svg", dark: "brand/clients/bni/logo-dark.svg" },
+    logoHeight: 11.5,
+    palette: { primary: "#006885", secondary: "#f15a22", dark: { background: "#071218", surface: "#0d1b23", text: "#eff3f6", secondary: "#408ea4" } },
+  },
+  bsi: {
+    id: "bsi",
+    name: "BSI",
+    legalName: "PT Bank Syariah Indonesia Tbk",
+    logos: { light: "brand/clients/bsi/logo.svg", dark: "brand/clients/bsi/logo.svg" },
+    logoHeight: 15,
+    palette: { primary: "#00a39d", secondary: "#f8ad3c", dark: { background: "#07171a", surface: "#0d2126", text: "#eff4f7", secondary: "#40bab6" } },
+  },
+  ocbc: {
+    id: "ocbc",
+    name: "OCBC",
+    legalName: "PT Bank OCBC NISP Tbk",
+    logos: { light: "brand/clients/ocbc/logo.svg", dark: "brand/clients/ocbc/logo.svg" },
+    logoHeight: 12,
+    whiteOnDark: true,
+    palette: { primary: "#e30613", secondary: "#b10615", dark: { background: "#1c090e", surface: "#261017", text: "#f5f0f3", secondary: "#ea444e" } },
+  },
+  danamon: {
+    id: "danamon",
+    name: "Danamon",
+    legalName: "PT Bank Danamon Indonesia Tbk",
+    logos: { light: "brand/clients/danamon/logo-light.svg", dark: "brand/clients/danamon/logo-dark.svg" },
+    logoHeight: 27,
+    palette: { primary: "#f15a22", secondary: "#004d43", dark: { background: "#1d100f", surface: "#281918", text: "#f6f2f4", secondary: "#f58359" } },
+  },
+  permata: {
+    id: "permata",
+    name: "Permata Bank",
+    legalName: "PT Bank Permata Tbk",
+    logos: { light: "brand/clients/permata/logo-light.svg", dark: "brand/clients/permata/logo-dark.svg" },
+    logoHeight: 15,
+    palette: { primary: "#0064ff", secondary: "#002850", dark: { background: "#071123", surface: "#0d1a31", text: "#eff3fa", secondary: "#408bff" } },
+  },
+  /** No logo published yet after the October 2026 merger; named in text until it is. */
+  "danareksa-im": {
+    id: "danareksa-im",
+    name: "Danareksa Investments",
+    legalName: "PT Danareksa Investment Management Indonesia",
+    palette: { primary: "#0032a0", secondary: null, dark: { background: "#070d1a", surface: "#0d1526", text: "#eff1f7", secondary: "#597ac1" } },
+  },
+  /** The symbol and wordmark from manulifeim.co.id, set side by side as the site shows them. */
+  "manulife-am": {
+    id: "manulife-am",
+    name: "Manulife Investments",
+    legalName: "PT Manulife Aset Manajemen Indonesia",
+    logos: { light: "brand/clients/manulife-am/logo-light.svg", dark: "brand/clients/manulife-am/logo-dark.svg" },
+    logoHeight: 11,
+    palette: { primary: "#00a758", secondary: "#282b3e", dark: { background: "#071714", surface: "#0d221e", text: "#eff5f5", secondary: "#40bd82" } },
+  },
+  "bahana-tcw": {
+    id: "bahana-tcw",
+    name: "Bahana TCW",
+    legalName: "PT Bahana TCW Investment Management",
+    logos: { light: "brand/clients/bahana-tcw/logo-light.png", dark: "brand/clients/bahana-tcw/logo-dark.svg" },
+    logoHeight: 18,
+    palette: { primary: "#d7181f", secondary: null, dark: { background: "#1b0a0f", surface: "#251218", text: "#f5f0f3", secondary: "#e15257" } },
+  },
+  "sucor-am": {
+    id: "sucor-am",
+    name: "Sucor Asset Management",
+    legalName: "PT Sucorinvest Asset Management",
+    logos: { light: "brand/clients/sucor-am/logo.svg", dark: "brand/clients/sucor-am/logo.svg" },
+    logoHeight: 22,
+    whiteOnDark: true,
+    palette: { primary: "#3a5896", secondary: null, dark: { background: "#0d1019", surface: "#141925", text: "#f0f2f7", secondary: "#6b82b0" } },
+  },
+  /** The site's logo for dark backgrounds; the light version draws its white in the logo's grey #55554b. */
+  syailendra: {
+    id: "syailendra",
+    name: "Syailendra Capital",
+    legalName: "PT Syailendra Capital",
+    logos: { light: "brand/clients/syailendra/logo-light.svg", dark: "brand/clients/syailendra/logo-dark.svg" },
+    logoHeight: 9,
+    palette: { primary: "#f06432", secondary: "#55554b", dark: { background: "#1d1110", surface: "#281a1a", text: "#f6f3f4", secondary: "#f48b65" } },
+  },
+  /** The site only has a logo for dark backgrounds; the light version draws its white wordmark in black. */
+  "sinarmas-am": {
+    id: "sinarmas-am",
+    name: "Sinarmas Asset Management",
+    legalName: "PT Sinarmas Asset Management",
+    logos: { light: "brand/clients/sinarmas-am/logo-light.png", dark: "brand/clients/sinarmas-am/logo-dark.png" },
+    logoHeight: 16,
+    palette: { primary: "#ed1c25", secondary: null, dark: { background: "#1d0b0f", surface: "#271219", text: "#f6f0f4", secondary: "#f2555c" } },
+  },
+  ashmore: {
+    id: "ashmore",
+    name: "Ashmore",
+    legalName: "PT Ashmore Asset Management Indonesia Tbk",
+    logos: { light: "brand/clients/ashmore/logo-light.svg", dark: "brand/clients/ashmore/logo-dark.svg" },
+    logoHeight: 14,
+    palette: { primary: "#00305d", secondary: "#00a8dd", dark: { background: "#070d14", surface: "#0d141f", text: "#eff1f5", secondary: "#00a8dd" } },
+  },
+  eastspring: {
+    id: "eastspring",
+    name: "Eastspring Investments",
+    legalName: "PT Eastspring Investments Indonesia",
+    logos: { light: "brand/clients/eastspring/logo-light.png", dark: "brand/clients/eastspring/logo-light.png" },
+    logoHeight: 17,
+    whiteOnDark: true,
+    palette: { primary: "#ed1b2e", secondary: "#68727a", dark: { background: "#1d0b10", surface: "#27121a", text: "#f6f0f4", secondary: "#f25462" } },
+  },
 } satisfies Record<string, ClientBrand>;
 
 export type ClientId = keyof typeof CLIENTS;
