@@ -43,6 +43,7 @@ export default defineDeck({
 | `defineDeck({ meta, client, slides })` | The deck. `slides` is a list of `{ kind: "content" \| "dark", Render }`. |
 | `meta` | `file` (output name), `title` (printed in every header), `date`, `place?`, `classification?` (default "Rahasia"/"Confidential"), `language?` ("id" default, or "en"). |
 | `client` | A client id from `engine/clients.ts`, or a `defineClient({...})` object. `--client` overrides it. |
+| `defineClient({ id, name, logos?, logoHeight?, whiteOnDark?, palette? })` | A client the deck brings. Logos are paths relative to the deck's folder (`{ light, dark }`); `palette` is `{ primary, secondary, dark: { background, surface, text } }`; anything missing falls back to Praisindo's. |
 | `useDeck()` | Inside a slide: `{ meta, client, inks, assets }`. `inks.ink` (strong brand colour that holds white text), `inks.tint` (pale brand tint), `inks.series` (chart colours, brand first). |
 | `useWords()` | The frame's words in the deck's language. |
 
@@ -110,3 +111,6 @@ with `--pptx` the PowerPoint file. Fails, naming the slide, if any slide runs ov
 - Images must be PNG or JPEG (the engine rasterises SVG logos for you).
 - Text cannot rotate; set vertical labels as stacked lines or leave them out.
 - An icon drawn with circles or rectangles cannot be redrawn; the engine says which and you pick another.
+- Content that does not fit spills onto another page and the build fails naming the slide. When
+  writing a deck without building it (in a chat), keep each slide within the space: a table of
+  about 15 short rows, three to five cards, or one diagram per slide.

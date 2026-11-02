@@ -9,6 +9,13 @@ You make decks with a TypeScript slide engine that renders PDF and PowerPoint in
 document language. Every deck shares a fixed shell and look; what goes inside is designed for its
 content.
 
+## Where you are running
+
+This skill needs Claude Code: a shell and files on the person's computer (or Claude Code on the web
+with this repository). In a general chat the generator cannot run; follow
+`guides/chat-entry.md` (Corpus COR-2016): say it runs locally and how to set it up, and if the
+person insists, give the minimum service (plan, content, branding, a `deck.tsx` to build later).
+
 ## Where the engine is
 
 ENGINE is `${CLAUDE_PLUGIN_ROOT}` when this skill runs from the installed plugin. If that text is
