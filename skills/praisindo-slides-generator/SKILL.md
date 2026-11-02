@@ -1,6 +1,6 @@
 ---
 name: praisindo-slides-generator
-description: Make Praisindo slide decks (client presentations, proposals, product overviews, internal reviews) in the Praisindo design system, delivered as PDF and PowerPoint. Use whenever someone asks for slides, a deck or a presentation for Praisindo or one of its clients (CIMB Niaga, Nobu Bank, Bank BTN, Trimegah, Batavia, Maybank AM or others), or asks to remake, restyle or fix an existing deck in the Praisindo style.
+description: Make Praisindo slide decks (client presentations, proposals, product overviews, internal reviews) in the Praisindo design system, delivered as PDF and PowerPoint. Use whenever someone asks for slides, a deck or a presentation for Praisindo or one of its clients (CIMB Niaga, Nobu Bank, Bank BTN, Trimegah, Batavia, Maybank AM, OCBC Sekuritas or others), or asks to remake, restyle or fix an existing deck in the Praisindo style.
 ---
 
 # Praisindo Slides Generator

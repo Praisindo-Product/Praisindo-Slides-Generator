@@ -13,7 +13,8 @@ assets, and a Claude Code plugin that packages all of it as the `praisindo-slide
   client's colours.
 - The Praisindo design system's look: Libre Franklin, light paper, hairline cards and tables.
 - The client's brand applied for you (CIMB Niaga, Nobu Bank, Bank BTN, Trimegah AM, Batavia,
-  Maybank AM, or Praisindo alone), and the same deck rebuildable for another client in one command.
+  Maybank AM, OCBC Sekuritas, or Praisindo alone), and the same deck rebuildable for another
+  client in one command.
 - A check that every slide fits on one page, previews and contact sheets for review, a PDF, and a
   PowerPoint file with live slide numbers and a framed layout for adding slides by hand.
 

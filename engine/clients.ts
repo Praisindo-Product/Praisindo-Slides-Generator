@@ -116,6 +116,16 @@ export const CLIENTS = {
     logoHeight: 18,
     palette: { primary: "#ffc600", secondary: "#373737", dark: { background: "#0d0c09", surface: "#171510", text: "#f8f6f0", secondary: "#b3ada0" } },
   },
+  /** No preset in WMS-IMS Ultimate yet: logo and red from ocbcsekuritas.com. */
+  "ocbc-sekuritas": {
+    id: "ocbc-sekuritas",
+    name: "OCBC Sekuritas",
+    legalName: "PT OCBC Sekuritas Indonesia",
+    logos: { light: "brand/clients/ocbc-sekuritas/logo.svg", dark: "brand/clients/ocbc-sekuritas/logo.svg" },
+    logoHeight: 12,
+    whiteOnDark: true,
+    palette: { primary: "#e32028", secondary: null, dark: { background: "#160a0b", surface: "#201012", text: "#f8f1f1", secondary: "#e8676b" } },
+  },
 } satisfies Record<string, ClientBrand>;
 
 export type ClientId = keyof typeof CLIENTS;

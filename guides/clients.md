@@ -15,9 +15,11 @@ diagram's client tint, and the chart series. Everything else stays Praisindo's.
 | `trimegah-am` | Trimegah Asset Management | `#f05a22`, `#0038a0` |
 | `batavia` | Batavia Prosperindo Aset Manajemen | `#002878` |
 | `maybank-am` | Maybank Asset Management | `#ffc600`, `#373737` |
+| `ocbc-sekuritas` | OCBC Sekuritas | `#e32028` |
 
 The palettes are the institutions' theme presets in WMS-IMS Ultimate
-(`src/data/seeds/institution-presets.ts` there). Keep them in step.
+(`src/data/seeds/institution-presets.ts` there). Keep them in step. OCBC Sekuritas has no preset
+there yet; its logo and red come from ocbcsekuritas.com.
 
 ## Adding a client
 
