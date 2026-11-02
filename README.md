@@ -26,7 +26,7 @@ Requirements: Node.js 20.19 or later (22 recommended, see `.nvmrc`), Git, and Cl
 ### Option 1: install the plugin (use it from any folder)
 
 ```
-claude plugin marketplace add AlifioDitya/Praisindo-Slides-Generator
+claude plugin marketplace add Praisindo-Product/Praisindo-Slides-Generator
 claude plugin install praisindo-slides-generator@praisindo
 ```
 
@@ -43,7 +43,7 @@ claude plugin update praisindo-slides-generator@praisindo
 ### Option 2: clone the repository (to work on decks and the engine here)
 
 ```
-git clone https://github.com/AlifioDitya/Praisindo-Slides-Generator.git
+git clone https://github.com/Praisindo-Product/Praisindo-Slides-Generator.git
 cd Praisindo-Slides-Generator
 npm ci
 claude
