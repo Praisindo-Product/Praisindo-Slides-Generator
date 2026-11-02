@@ -1,0 +1,7 @@
+{
+  "name": "praisindo-slides-generator",
+  "version": "1.0.0",
+  "description": "Make Praisindo slide decks in the Praisindo design system, delivered as PDF and PowerPoint.",
+  "author": { "name": "Praisindo" },
+  "keywords": ["slides", "presentation", "pptx", "pdf", "praisindo"]
+}

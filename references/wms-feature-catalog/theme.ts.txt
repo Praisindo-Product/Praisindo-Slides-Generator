@@ -1,0 +1,116 @@
+import { Font, StyleSheet } from "@react-pdf/renderer";
+import path from "node:path";
+
+/**
+ * The catalog is drawn in the product's own document language, the one the Consolidated Client
+ * Statement uses (src/features/wealth/profiles/statement-pdf/statement-document.tsx): Libre
+ * Franklin, the light theme's tokens, a brand header and a hairline footer on every page, bordered
+ * cards and tables with a raised header row, figure strips and tinted tags. Keep the two in step.
+ */
+
+export const ROOT = process.cwd().replace(/\\/g, "/");
+export const FONT = "Libre Franklin";
+
+let registered = false;
+export function registerFonts(): void {
+  if (registered) return;
+  registered = true;
+  Font.register({
+    family: FONT,
+    fonts: [400, 500, 600, 700].map((fontWeight) => ({ src: path.join(ROOT, "public/fonts/statement/libre-franklin-" + fontWeight + ".ttf"), fontWeight })),
+  });
+  // A module or capability name split with a hyphen reads as a typo, so nothing hyphenates.
+  Font.registerHyphenationCallback((word) => [word]);
+}
+
+/* ------------------------------------------------------------------ tokens (light theme) */
+
+export const FOREGROUND = "#0d1522";
+export const MUTED = "#4d5b70";
+export const MUTED_STRONG = "#334054";
+export const BORDER = "#d8e0ec";
+export const RAISED = "#f2f5fa";
+export const SUBTLE = "#f7f9fc";
+export const ACCENT = "#2f57cc";
+// The *-subtle tokens are low-alpha tints; on white paper they resolve to these.
+export const ACCENT_SUBTLE = "#eaeffe";
+export const SUCCESS = "#10794f";
+export const SUCCESS_SUBTLE = "#e7f2ed";
+export const WARNING = "#8a5a06";
+export const WARNING_SUBTLE = "#f5ecdc";
+export const NEUTRAL_SUBTLE = "#eef1f6";
+
+export const PAGE_W = 841.89;
+export const PAGE_H = 595.28;
+export const PAGE_PADDING_X = 40;
+export const CONTENT_W = Math.floor(PAGE_W - PAGE_PADDING_X * 2);
+export const GAP = 16;
+export const RADIUS = 7;
+export const HAIRLINE = 0.75;
+
+export const s = StyleSheet.create({
+  // No line height on the page: the renderer drops a fixed footer under a page line height.
+  page: { paddingTop: 28, paddingBottom: 52, paddingHorizontal: PAGE_PADDING_X, fontFamily: FONT, fontSize: 8.5, color: FOREGROUND, backgroundColor: "#ffffff" },
+
+  chrome: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingBottom: 11, marginBottom: 18, borderBottomWidth: HAIRLINE, borderBottomColor: BORDER },
+  brand: { flexDirection: "row", alignItems: "center", gap: 9 },
+  logo: { height: 19, objectFit: "contain" },
+  brandName: { fontSize: 10, fontWeight: 600 },
+  brandContext: { fontSize: 7.5, color: MUTED, marginTop: 2 },
+  chromeRight: { alignItems: "flex-end" },
+  chromeDoc: { fontSize: 8.5, fontWeight: 500 },
+  chromeContext: { fontSize: 7.5, color: MUTED, marginTop: 2 },
+
+  footer: { position: "absolute", left: PAGE_PADDING_X, right: PAGE_PADDING_X, bottom: 22, flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 8, borderTopWidth: HAIRLINE, borderTopColor: BORDER, fontSize: 7, color: MUTED },
+  footerGroup: { flexDirection: "row", gap: 14 },
+
+  titleBlock: { marginBottom: 16 },
+  overline: { fontSize: 7.5, fontWeight: 500, color: MUTED, marginBottom: 5 },
+  title: { fontSize: 17, fontWeight: 600, letterSpacing: -0.34 },
+  description: { fontSize: 9, color: MUTED, marginTop: 5, maxWidth: 620, lineHeight: 1.4 },
+
+  section: { marginBottom: 18 },
+  sectionHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 8 },
+  sectionTitle: { fontSize: 10, fontWeight: 600 },
+  sectionMeta: { fontSize: 7.5, color: MUTED },
+
+  card: { borderWidth: HAIRLINE, borderColor: BORDER, borderRadius: RADIUS, paddingVertical: 12, paddingHorizontal: 14 },
+  cardTitle: { fontSize: 9, fontWeight: 600, marginBottom: 6 },
+  row: { flexDirection: "row", gap: GAP },
+
+  strip: { flexDirection: "row", borderWidth: HAIRLINE, borderColor: BORDER, borderRadius: RADIUS, paddingVertical: 12, paddingHorizontal: 16, gap: 20 },
+  figure: { flex: 1 },
+  figureLabel: { fontSize: 7.5, color: MUTED },
+  figureValue: { fontSize: 13.5, fontWeight: 600, letterSpacing: -0.13, marginTop: 4 },
+  figureText: { fontSize: 9.5, fontWeight: 600, marginTop: 4, lineHeight: 1.3 },
+  figureNote: { fontSize: 7.5, color: MUTED_STRONG, marginTop: 3, lineHeight: 1.35 },
+
+  thead: { flexDirection: "row", alignItems: "stretch", backgroundColor: RAISED, borderWidth: HAIRLINE, borderColor: BORDER, borderTopLeftRadius: RADIUS, borderTopRightRadius: RADIUS },
+  th: { fontSize: 7.5, fontWeight: 500, color: MUTED_STRONG },
+  tr: { flexDirection: "row", borderLeftWidth: HAIRLINE, borderRightWidth: HAIRLINE, borderBottomWidth: HAIRLINE, borderColor: BORDER, alignItems: "flex-start" },
+  trLast: { borderBottomLeftRadius: RADIUS, borderBottomRightRadius: RADIUS },
+  trGroup: { backgroundColor: SUBTLE },
+  cell: { paddingHorizontal: 8, paddingVertical: 5.5 },
+  headCell: { paddingHorizontal: 8, paddingVertical: 6, justifyContent: "flex-end" },
+  cellText: { fontSize: 8.5, lineHeight: 1.4 },
+  strong: { fontWeight: 600 },
+  sub: { fontSize: 7.5, color: MUTED, marginTop: 2, lineHeight: 1.4 },
+  muted: { color: MUTED },
+  center: { textAlign: "center" },
+  right: { textAlign: "right" },
+
+
+  tag: { alignSelf: "flex-start", borderRadius: 3, paddingHorizontal: 6, paddingTop: 2.5, paddingBottom: 2 },
+  tagText: { fontSize: 7.5, fontWeight: 500 },
+  swatch: { width: 6, height: 6, borderRadius: 1.5 },
+
+  prose: { fontSize: 9, lineHeight: 1.55, marginBottom: 8, color: FOREGROUND },
+  proseMuted: { fontSize: 8.5, lineHeight: 1.5, color: MUTED_STRONG },
+  note: { fontSize: 7.5, color: MUTED, marginTop: 8, lineHeight: 1.45 },
+  bullet: { flexDirection: "row", gap: 6, marginBottom: 3.5 },
+  bulletDot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: MUTED, marginTop: 4.2 },
+  bulletText: { flex: 1, fontSize: 8.5, lineHeight: 1.45 },
+  step: { flexDirection: "row", gap: 7, marginBottom: 4 },
+  stepNumber: { width: 13, height: 13, borderRadius: 6.5, backgroundColor: RAISED, borderWidth: HAIRLINE, borderColor: BORDER, fontSize: 6.5, fontWeight: 600, color: MUTED_STRONG, textAlign: "center", paddingTop: 2.6 },
+  stepText: { flex: 1, fontSize: 8.5, lineHeight: 1.45, paddingTop: 1 },
+});

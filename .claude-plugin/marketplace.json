@@ -1,0 +1,12 @@
+{
+  "name": "praisindo",
+  "description": "Praisindo's Claude Code plugins.",
+  "owner": { "name": "Praisindo" },
+  "plugins": [
+    {
+      "name": "praisindo-slides-generator",
+      "source": "./",
+      "description": "Make Praisindo slide decks in the Praisindo design system, delivered as PDF and PowerPoint."
+    }
+  ]
+}

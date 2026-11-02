@@ -1,0 +1,1154 @@
+import * as React from "react";
+import { Document, Image, Line, Page, Polygon, Polyline, StyleSheet, Svg, Text, View } from "@react-pdf/renderer";
+import { PLATFORM_PRINT_SERIES, type PrintPalette } from "@/domain/theme/print";
+import { logoBox } from "@/domain/theme/resolve";
+import type { PolicyMonitor } from "@/domain/wealth/monitoring";
+import type { NetAssetsBridge, ProfitAndLoss } from "@/domain/wealth/statements";
+import { registerStatementFonts, STATEMENT_FONT } from "./fonts";
+import type { WealthStatementData } from "./statement-data";
+
+registerStatementFonts();
+
+/**
+ * The consolidated statement as a document, drawn in the application's own design language so the
+ * paper a client keeps reads as the same product as the screens: Libre Franklin, the light theme's
+ * tokens, bordered cards and tables with a raised header row, figure strips, tinted status tags,
+ * sentence case, and amounts right aligned with losses in brackets. It is the institution's paper:
+ * its name and logo head every page and its brand colours draw the charts, from its record and
+ * its theme. Gains, losses and states keep their own colours.
+ *
+ * Landscape A4 gives the comparative columns room: positions beside the last month end and the
+ * last year end, and the result beside the previous month and the year to date, the way a set of
+ * published accounts carries its comparatives.
+ */
+
+/* ------------------------------------------------------------------ tokens (light theme) */
+
+const FOREGROUND = "#0d1522";
+const MUTED = "#4d5b70";
+const MUTED_STRONG = "#334054";
+const BORDER = "#d8e0ec";
+const RAISED = "#f2f5fa";
+const SUBTLE = "#f7f9fc";
+const SUCCESS = "#10794f";
+const WARNING = "#8a5a06";
+const DANGER = "#b4272c";
+// The *-subtle tokens are low-alpha tints; on white paper they resolve to these.
+const SUCCESS_SUBTLE = "#e7f2ed";
+const WARNING_SUBTLE = "#f5ecdc";
+const DANGER_SUBTLE = "#f8ebeb";
+const NEUTRAL_SUBTLE = "#eef1f6";
+/** The institution's brand colours on paper, for the charts; the platform's without a theme. */
+const Brand = React.createContext<PrintPalette>({ accent: PLATFORM_PRINT_SERIES[0], series: PLATFORM_PRINT_SERIES });
+
+/** The header's logo, sized by its artwork toward one visual weight, as the sidebar sizes it. */
+const LOGO_LIMITS = { area: 1150, maxWidth: 120, maxHeight: 24, minHeight: 10 } as const;
+
+/** The header logo's box at the theme's logo size, within caps that keep it in the header. */
+function logoSize(aspect: number, scale = 1) {
+  return logoBox(aspect, { area: LOGO_LIMITS.area * scale * scale, maxWidth: Math.min(150, LOGO_LIMITS.maxWidth * scale), maxHeight: Math.min(30, LOGO_LIMITS.maxHeight * scale), minHeight: LOGO_LIMITS.minHeight });
+}
+
+const PAGE_PADDING_X = 40;
+const CONTENT_W = Math.floor(841.89 - PAGE_PADDING_X * 2);
+const GAP = 16;
+const HALF_W = (CONTENT_W - GAP) / 2;
+const RADIUS = 7;
+const HAIRLINE = 0.75;
+
+const s = StyleSheet.create({
+  // No line height on the page: the renderer drops a fixed footer, and its page numbers, under a
+  // page line height. Prose sets its own on the text that needs it.
+  page: { paddingTop: 28, paddingBottom: 52, paddingHorizontal: PAGE_PADDING_X, fontFamily: STATEMENT_FONT, fontSize: 8.5, color: FOREGROUND, backgroundColor: "#ffffff" },
+
+  // Application header: brand on the left, the document and the client on the right.
+  chrome: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingBottom: 11, marginBottom: 18, borderBottomWidth: HAIRLINE, borderBottomColor: BORDER },
+  brand: { flexDirection: "row", alignItems: "center", gap: 9 },
+  // Height fixed and width from the image, so a wide wordmark and a square mark both sit on the line.
+  logo: { height: 19, maxWidth: 72, objectFit: "contain" },
+  brandName: { fontSize: 10, fontWeight: 600 },
+  brandContext: { fontSize: 7.5, color: MUTED, marginTop: 2 },
+  brandContextAlone: { fontSize: 7.5, color: MUTED },
+  chromeRight: { alignItems: "flex-end" },
+  chromeDoc: { fontSize: 8.5, fontWeight: 500 },
+  chromeClient: { fontSize: 7.5, color: MUTED, marginTop: 2 },
+
+  footer: { position: "absolute", left: PAGE_PADDING_X, right: PAGE_PADDING_X, bottom: 22, flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 8, borderTopWidth: HAIRLINE, borderTopColor: BORDER, fontSize: 7, color: MUTED },
+  footerGroup: { flexDirection: "row", gap: 14 },
+
+  // Page header: one title a page, its purpose under it.
+  titleBlock: { marginBottom: 16 },
+  title: { fontSize: 17, fontWeight: 600, letterSpacing: -0.34 },
+  description: { fontSize: 9, color: MUTED, marginTop: 5, maxWidth: 600, lineHeight: 1.4 },
+
+  section: { marginBottom: 18 },
+  sectionHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 8 },
+  sectionTitle: { fontSize: 10, fontWeight: 600 },
+  sectionMeta: { fontSize: 7.5, color: MUTED },
+
+  card: { borderWidth: HAIRLINE, borderColor: BORDER, borderRadius: RADIUS, paddingVertical: 12, paddingHorizontal: 14 },
+  cardTitle: { fontSize: 9, fontWeight: 600, marginBottom: 8 },
+  row: { flexDirection: "row", gap: GAP },
+
+  // Figure strip: label, value, note.
+  strip: { flexDirection: "row", borderWidth: HAIRLINE, borderColor: BORDER, borderRadius: RADIUS, paddingVertical: 12, paddingHorizontal: 16, gap: 20 },
+  figure: { flex: 1 },
+  figureLabel: { fontSize: 7.5, color: MUTED },
+  figureValue: { fontSize: 13.5, fontWeight: 600, letterSpacing: -0.13, marginTop: 4 },
+  figureNote: { fontSize: 7.5, color: MUTED_STRONG, marginTop: 3 },
+
+  // Tables: a raised header row in sentence case, hairline rows, rounded ends. The borders live
+  // on the rows, so a table that runs onto the next page closes cleanly where it breaks.
+  thead: { flexDirection: "row", alignItems: "stretch", backgroundColor: RAISED, borderWidth: HAIRLINE, borderColor: BORDER, borderTopLeftRadius: RADIUS, borderTopRightRadius: RADIUS },
+  th: { fontSize: 7.5, fontWeight: 500, color: MUTED_STRONG },
+  thSub: { fontSize: 7, color: MUTED, marginTop: 2 },
+  thTitle: { fontSize: 9.5, fontWeight: 600, color: FOREGROUND },
+  tr: { flexDirection: "row", borderLeftWidth: HAIRLINE, borderRightWidth: HAIRLINE, borderBottomWidth: HAIRLINE, borderColor: BORDER, alignItems: "flex-start" },
+  trLast: { borderBottomLeftRadius: RADIUS, borderBottomRightRadius: RADIUS },
+  trGroup: { backgroundColor: SUBTLE },
+  trTotal: { backgroundColor: RAISED },
+  cell: { paddingHorizontal: 8, paddingVertical: 5.5 },
+  headCell: { paddingHorizontal: 8, paddingVertical: 6, justifyContent: "flex-end" },
+  cellDense: { paddingVertical: 4.2 },
+  right: { textAlign: "right" },
+  strong: { fontWeight: 600 },
+  sub: { fontSize: 7, color: MUTED, marginTop: 2 },
+  muted: { color: MUTED },
+  positive: { color: SUCCESS },
+  negative: { color: DANGER },
+
+  // Definition list.
+  kv: { flexDirection: "row", justifyContent: "space-between", gap: 12, paddingVertical: 5, borderBottomWidth: HAIRLINE, borderBottomColor: BORDER },
+  kvLast: { borderBottomWidth: 0 },
+  kvTerm: { color: MUTED },
+  kvValue: { textAlign: "right", maxWidth: "70%" },
+
+  tag: { alignSelf: "flex-start", borderRadius: 3, paddingHorizontal: 6, paddingTop: 2.5, paddingBottom: 2 },
+  tagText: { fontSize: 7.5, fontWeight: 500 },
+
+  bar: { flexDirection: "row", height: 6, borderRadius: 3, overflow: "hidden", backgroundColor: RAISED },
+  legendRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 5, borderBottomWidth: HAIRLINE, borderBottomColor: BORDER },
+  swatch: { width: 6, height: 6, borderRadius: 1.5 },
+
+  note: { fontSize: 7.5, color: MUTED, marginTop: 8, lineHeight: 1.45 },
+  prose: { fontSize: 8.5, lineHeight: 1.5, marginBottom: 9 },
+  proseTitle: { fontWeight: 600 },
+  empty: { borderWidth: HAIRLINE, borderColor: BORDER, borderRadius: RADIUS, paddingVertical: 14, paddingHorizontal: 14, fontSize: 8.5, color: MUTED, lineHeight: 1.45 },
+});
+
+/* ------------------------------------------------------------------ formatting */
+
+const amountFormat = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 });
+const quantityFormat = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 4 });
+const priceFormat = new Intl.NumberFormat("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const navFormat = new Intl.NumberFormat("en-GB", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
+const MONTHS_LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const GROUP_ORDER = ["Mutual funds", "Bonds and sukuk", "Deposits", "Structured products", "Bancassurance"];
+
+/** Whole rupiah, a loss or a deduction in brackets. */
+function amount(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "";
+  const rounded = Math.round(value) || 0;
+  return rounded < 0 ? "(" + amountFormat.format(Math.abs(rounded)) + ")" : amountFormat.format(rounded);
+}
+/** As a set of accounts prints a figure: nil as a dash. */
+function figure(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "";
+  return Math.round(value) === 0 ? "-" : amount(value);
+}
+function percent(value: number | null | undefined, digits = 2): string {
+  if (value === null || value === undefined) return "";
+  return value.toFixed(digits) + "%";
+}
+function signedPercent(value: number | null | undefined, digits = 2): string {
+  if (value === null || value === undefined) return "";
+  return (Number(value.toFixed(digits)) > 0 ? "+" : "") + value.toFixed(digits) + "%";
+}
+function date(value: string | null | undefined): string {
+  if (!value) return "";
+  const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+  return month >= 1 && month <= 12 ? day + " " + MONTHS[month - 1] + " " + year : value;
+}
+function dayMonth(value: string): string {
+  const [, month, day] = value.slice(0, 10).split("-").map(Number);
+  return day + " " + MONTHS[month - 1];
+}
+function monthYear(value: string): string {
+  const [year, month] = value.slice(0, 10).split("-").map(Number);
+  return MONTHS_LONG[month - 1] + " " + year;
+}
+function dateTime(value: string): string {
+  return date(value) + ", " + value.slice(11, 16) + " UTC";
+}
+
+/**
+ * Colour is kept for what was earned or lost: a result, a gain, a return. Money moving in or out,
+ * and a change in value that includes it, stays in the text colour. Zero at the shown precision
+ * is not coloured.
+ */
+type Sign = "positive" | "negative" | undefined;
+function signOf(value: number | null | undefined, digits = 0): Sign {
+  if (value === null || value === undefined) return undefined;
+  const shown = Number(value.toFixed(digits));
+  return shown > 0 ? "positive" : shown < 0 ? "negative" : undefined;
+}
+function signStyle(sign: Sign) {
+  return sign === "positive" ? s.positive : sign === "negative" ? s.negative : {};
+}
+function changeRatio(now: number, before: number): string {
+  return before > 0 ? signedPercent(((now - before) / before) * 100, 1) : "";
+}
+/** A price in the holding's own currency; named when it is not rupiah, since every other figure is. */
+function price(line: { readonly price: number | null; readonly productType: string; readonly currency?: string }): string {
+  if (line.price === null) return "";
+  const figure = line.productType === "MUTUAL_FUND" ? navFormat.format(line.price) : priceFormat.format(line.price);
+  return line.currency && line.currency !== "IDR" ? line.currency + " " + figure : figure;
+}
+
+/* ------------------------------------------------------------------ primitives */
+
+type Tone = "success" | "warning" | "danger" | "neutral";
+
+function Tag({ tone, children }: { tone: Tone; children: React.ReactNode }) {
+  const [backgroundColor, color] =
+    tone === "success" ? [SUCCESS_SUBTLE, SUCCESS] : tone === "warning" ? [WARNING_SUBTLE, WARNING] : tone === "danger" ? [DANGER_SUBTLE, DANGER] : [NEUTRAL_SUBTLE, MUTED_STRONG];
+  return (
+    <View style={[s.tag, { backgroundColor }]}>
+      <Text style={[s.tagText, { color }]}>{children}</Text>
+    </View>
+  );
+}
+
+function monitorTone(tone: PolicyMonitor["tone"]): Tone {
+  return tone === "success" ? "success" : tone === "warning" ? "warning" : tone === "danger" ? "danger" : "neutral";
+}
+
+function Section({ title, meta, children, keepTogether }: { title: string; meta?: string; children: React.ReactNode; keepTogether?: boolean }) {
+  return (
+    <View style={s.section} wrap={!keepTogether}>
+      <View style={s.sectionHead} minPresenceAhead={90}>
+        <Text style={s.sectionTitle}>{title}</Text>
+        {meta ? <Text style={s.sectionMeta}>{meta}</Text> : null}
+      </View>
+      {children}
+    </View>
+  );
+}
+
+function Empty({ children }: { children: React.ReactNode }) {
+  return <Text style={s.empty}>{children}</Text>;
+}
+
+function FigureStrip({ cells }: { cells: readonly { readonly label: string; readonly value: string; readonly note?: string; readonly sign?: Sign }[] }) {
+  return (
+    <View style={s.strip} wrap={false}>
+      {cells.map((cell) => (
+        <View key={cell.label} style={s.figure}>
+          <Text style={s.figureLabel}>{cell.label}</Text>
+          <Text style={[s.figureValue, signStyle(cell.sign)]}>{cell.value}</Text>
+          {cell.note ? <Text style={s.figureNote}>{cell.note}</Text> : null}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function KeyValues({ rows }: { rows: readonly { readonly term: string; readonly value: React.ReactNode; readonly strong?: boolean }[] }) {
+  return (
+    <View>
+      {rows.map((row, index) => (
+        <View key={row.term} style={[s.kv, index === rows.length - 1 ? s.kvLast : {}]}>
+          <Text style={[s.kvTerm, row.strong ? [s.strong, { color: FOREGROUND }] : {}]}>{row.term}</Text>
+          <Text style={[s.kvValue, row.strong ? s.strong : {}]}>{row.value}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------------ tables */
+
+interface Column {
+  readonly label: string;
+  /** A second, quieter line under the header, such as the dates a period covers. */
+  readonly sub?: string;
+  /** Fixed width in points; the one column without it takes what the table has left. */
+  readonly w?: number;
+  readonly right?: boolean;
+  /** The table's name, set as a section title inside the header. */
+  readonly title?: boolean;
+}
+
+interface CellSpec {
+  readonly text: React.ReactNode;
+  readonly sub?: string | null;
+  readonly sign?: Sign;
+  readonly muted?: boolean;
+  readonly strong?: boolean;
+}
+
+type Cell = string | CellSpec | React.ReactElement | null;
+
+/** The columns of the table being drawn and their widths, resolved once from its width. */
+const TableLayout = React.createContext<{ readonly columns: readonly Column[]; readonly widths: readonly number[]; readonly dense?: boolean }>({ columns: [], widths: [] });
+
+function resolveWidths(columns: readonly Column[], width: number): number[] {
+  const fixed = columns.reduce((sum, column) => sum + (column.w ?? 0), 0);
+  const flexible = columns.filter((column) => column.w === undefined).length || 1;
+  return columns.map((column) => column.w ?? Math.max(60, (width - fixed) / flexible));
+}
+
+/**
+ * A table the width it is given. A short table is kept whole on one page; a long one runs on, its
+ * header repeated at the top of the next page.
+ */
+function Table({ columns, width = CONTENT_W, keepTogether, dense, children }: { columns: readonly Column[]; width?: number; keepTogether?: boolean; dense?: boolean; children: React.ReactNode }) {
+  const widths = resolveWidths(columns, width);
+  return (
+    <TableLayout.Provider value={{ columns, widths, dense }}>
+      <View style={{ width }} wrap={!keepTogether}>
+        <View style={s.thead} fixed={!keepTogether}>
+          {columns.map((column, index) => (
+            <View key={column.label + index} style={[s.headCell, { width: widths[index] }]}>
+              <Text style={[column.title ? s.thTitle : s.th, column.right ? s.right : {}]}>{column.label}</Text>
+              {column.sub ? <Text style={[s.thSub, column.right ? s.right : {}]}>{column.sub}</Text> : null}
+            </View>
+          ))}
+        </View>
+        {children}
+      </View>
+    </TableLayout.Provider>
+  );
+}
+
+type RowKind = "body" | "group" | "subtotal" | "total";
+
+function Row({ cells, kind = "body", last, indent }: { cells: readonly Cell[]; kind?: RowKind; last?: boolean; indent?: boolean }) {
+  const { columns, widths, dense } = React.useContext(TableLayout);
+  const emphasis = kind !== "body";
+  return (
+    <View
+      style={[s.tr, kind === "group" ? s.trGroup : {}, kind === "total" ? s.trTotal : {}, last ? s.trLast : {}]}
+      wrap={false}
+      // A group heading never ends a page on its own.
+      minPresenceAhead={kind === "group" ? 44 : undefined}
+    >
+      {columns.map((column, index) => {
+        const cell = cells[index] ?? "";
+        const style = [s.cell, dense ? s.cellDense : {}, { width: widths[index] }, index === 0 && indent ? { paddingLeft: 20 } : {}];
+        if (React.isValidElement(cell)) {
+          // A tag carries its own padding: the cell gives it back so its words sit on the row's line.
+          return (
+            <View key={column.label + index} style={[...style, { paddingTop: (dense ? 4.2 : 5.5) - 2.5, paddingBottom: (dense ? 4.2 : 5.5) - 2 }]}>
+              {cell}
+            </View>
+          );
+        }
+        const spec: CellSpec = typeof cell === "string" ? { text: cell } : (cell as CellSpec);
+        return (
+          <View key={column.label + index} style={style}>
+            <Text style={[column.right ? s.right : {}, emphasis || spec.strong ? s.strong : {}, spec.muted ? s.muted : {}, signStyle(spec.sign)]}>{spec.text}</Text>
+            {spec.sub ? <Text style={[s.sub, column.right ? s.right : {}]}>{spec.sub}</Text> : null}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------------ charts */
+
+function AllocationBar({ items }: { items: readonly { readonly label: string; readonly value: number; readonly weight: number | null }[] }) {
+  const SERIES = React.useContext(Brand).series;
+  const total = items.reduce((sum, item) => sum + (item.weight ?? 0), 0) || 1;
+  return (
+    <View>
+      <View style={s.bar}>
+        {items.map((item, index) => (
+          <View key={item.label} style={{ width: (((item.weight ?? 0) / total) * 100).toFixed(3) + "%", height: 6, backgroundColor: SERIES[index % SERIES.length], borderRightWidth: index === items.length - 1 ? 0 : 1.5, borderRightColor: "#ffffff" }} />
+        ))}
+      </View>
+      <View style={{ marginTop: 8 }}>
+        {items.map((item, index) => (
+          <View key={item.label} style={[s.legendRow, index === items.length - 1 ? s.kvLast : {}]}>
+            <View style={[s.swatch, { backgroundColor: SERIES[index % SERIES.length] }]} />
+            <Text style={{ flex: 1 }}>{item.label}</Text>
+            <Text style={[s.right, { width: 90 }]}>{amount(item.value)}</Text>
+            <Text style={[s.right, s.muted, { width: 44 }]}>{percent(item.weight, 1)}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/** A step that reads well on an axis: 1, 2, 2.5 or 5 times a power of ten. */
+function niceStep(span: number, count: number): number {
+  const raw = span / Math.max(1, count);
+  const power = Math.pow(10, Math.floor(Math.log10(raw)));
+  const fraction = raw / power;
+  return (fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 2.5 ? 2.5 : fraction <= 5 ? 5 : 10) * power;
+}
+
+function IndexChart({ portfolio, benchmark, width, height }: { portfolio: readonly { value: number; date: string }[]; benchmark: readonly { value: number; date: string }[]; width: number; height: number }) {
+  const accent = React.useContext(Brand).accent;
+  const all = [...portfolio, ...benchmark].map((point) => point.value);
+  if (all.length < 2) return <Empty>Not enough history to draw a chart for this period.</Empty>;
+  const step = niceStep(Math.max(...all) - Math.min(...all) || 1, 4);
+  const min = Math.floor(Math.min(...all) / step) * step;
+  const max = Math.ceil(Math.max(...all) / step) * step;
+  const span = max - min || 1;
+  const pad = { left: 30, right: 4, top: 6, bottom: 18 };
+  const plotW = width - pad.left - pad.right;
+  const plotH = height - pad.top - pad.bottom;
+  const x = (index: number, count: number) => pad.left + (index / Math.max(1, count - 1)) * plotW;
+  const y = (value: number) => pad.top + (1 - (value - min) / span) * plotH;
+  const path = (points: readonly { value: number }[]) => points.map((point, index) => x(index, points.length).toFixed(1) + "," + y(point.value).toFixed(1)).join(" ");
+  const area = path(portfolio) + " " + x(portfolio.length - 1, portfolio.length).toFixed(1) + "," + (pad.top + plotH) + " " + pad.left + "," + (pad.top + plotH);
+  const ticks: number[] = [];
+  for (let tick = min; tick <= max + step / 2; tick += step) ticks.push(Number(tick.toFixed(4)));
+  // A label at each month's first point, thinned so they never crowd.
+  const count = portfolio.length;
+  const months = portfolio.map((point, index) => ({ index, month: point.date.slice(0, 7) })).filter((item, index, list) => index > 0 && item.month !== list[index - 1].month);
+  const every = Math.max(1, Math.ceil(months.length / 8));
+  // Clear of the date labels at either end.
+  const monthTicks = months.filter((item, index) => index % every === 0 && x(item.index, count) - pad.left > 72 && width - pad.right - x(item.index, count) > 78);
+  const labelStyle = { fontSize: 6.5, fill: MUTED, fontFamily: STATEMENT_FONT };
+  return (
+    <View>
+      <Svg width={width} height={height}>
+        {ticks.map((tick) => (
+          <React.Fragment key={tick}>
+            <Line x1={pad.left} y1={y(tick)} x2={width - pad.right} y2={y(tick)} stroke={BORDER} strokeWidth={0.6} />
+            <Text x={pad.left - 6} y={y(tick) + 2.3} style={labelStyle} textAnchor="end">
+              {Number.isInteger(tick) ? tick.toFixed(0) : tick.toFixed(1)}
+            </Text>
+          </React.Fragment>
+        ))}
+        <Polygon points={area} fill={accent} fillOpacity={0.08} />
+        <Polyline points={path(benchmark)} fill="none" stroke={MUTED} strokeWidth={0.9} strokeDasharray="3 2.5" />
+        <Polyline points={path(portfolio)} fill="none" stroke={accent} strokeWidth={1.5} />
+        {monthTicks.map((item) => {
+          const [year, month] = item.month.split("-").map(Number);
+          return (
+            <Text key={item.month} x={x(item.index, count)} y={height - 4} style={labelStyle} textAnchor="middle">
+              {MONTHS[month - 1] + (month === 1 ? " " + year : "")}
+            </Text>
+          );
+        })}
+        <Text x={pad.left} y={height - 4} style={labelStyle}>
+          {date(portfolio[0]?.date)}
+        </Text>
+        <Text x={width - pad.right} y={height - 4} style={labelStyle} textAnchor="end">
+          {date(portfolio[count - 1]?.date)}
+        </Text>
+      </Svg>
+      <View style={{ flexDirection: "row", gap: 16, marginTop: 6 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <View style={{ width: 12, height: 1.5, backgroundColor: accent }} />
+          <Text style={s.sectionMeta}>Portfolio, time weighted, indexed to 100</Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Svg width={12} height={3}>
+            <Line x1={0} y1={1.5} x2={12} y2={1.5} stroke={MUTED} strokeWidth={0.9} strokeDasharray="3 2.5" />
+          </Svg>
+          <Text style={s.sectionMeta}>Benchmark</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function Prose({ title, children }: { title?: string; children: React.ReactNode }) {
+  return (
+    <Text style={s.prose}>
+      {title ? <Text style={s.proseTitle}>{title + ". "}</Text> : null}
+      {children}
+    </Text>
+  );
+}
+
+/* ------------------------------------------------------------------ page frame */
+
+function Chrome({ data }: { data: WealthStatementData }) {
+  return (
+    <View style={s.chrome} fixed>
+      <View style={s.brand}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- a PDF image has no alternative text */}
+        {data.header.institutionLogo ? <Image src={data.header.institutionLogo.src} style={data.header.institutionLogo.aspect ? { ...logoSize(data.header.institutionLogo.aspect, data.header.institutionLogo.scale), objectFit: "contain" } : s.logo} /> : null}
+        <View>
+          {/* The name is set beside the logo where the theme sets it so, and always without a logo. */}
+          {data.header.showInstitutionName || !data.header.institutionLogo ? <Text style={s.brandName}>{data.header.institutionName}</Text> : null}
+          <Text style={data.header.showInstitutionName || !data.header.institutionLogo ? s.brandContext : s.brandContextAlone}>{data.header.institutionContext}, Wealth Management</Text>
+        </View>
+      </View>
+      <View style={s.chromeRight}>
+        <Text style={s.chromeDoc}>
+          {data.header.title}, {date(data.header.periodFrom)} to {date(data.header.periodTo)}
+        </Text>
+        <Text style={s.chromeClient}>
+          {data.party.name}, {data.party.code}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function Footer({ data }: { data: WealthStatementData }) {
+  return (
+    <View style={s.footer} fixed>
+      <View style={s.footerGroup}>
+        <Text>Confidential</Text>
+        <Text>Reference {data.header.reference}</Text>
+        <Text>Generated {dateTime(data.header.generatedAt)}</Text>
+      </View>
+      <Text render={({ pageNumber, totalPages }) => "Page " + pageNumber + " of " + totalPages} />
+    </View>
+  );
+}
+
+function Sheet({ data, title, description, children }: { data: WealthStatementData; title: string; description?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <Page size="A4" orientation="landscape" style={s.page}>
+      <Chrome data={data} />
+      <Footer data={data} />
+      <View style={s.titleBlock}>
+        <Text style={s.title}>{title}</Text>
+        {description ? <Text style={s.description}>{description}</Text> : null}
+      </View>
+      {children}
+    </Page>
+  );
+}
+
+/* ------------------------------------------------------------------ statement blocks */
+
+const AMOUNT_W = 90;
+const CHANGE_W = 86;
+const PERIOD_W = 118;
+
+interface PeriodColumn {
+  readonly label: string;
+  readonly sub: string;
+  readonly pnl: ProfitAndLoss;
+  readonly bridge: NetAssetsBridge;
+}
+
+function periodColumns(data: WealthStatementData): PeriodColumn[] {
+  const { income, bridges } = data.comparatives;
+  const columns: PeriodColumn[] = income.periods.map((period, index) => ({
+    label: period.key === "PREVIOUS_MONTH" ? monthYear(period.from) : period.label,
+    sub: period.key === "PREVIOUS_MONTH" ? "Whole month" : dayMonth(period.from) + " to " + dayMonth(period.to),
+    pnl: income.statements[index],
+    bridge: bridges[index],
+  }));
+  // The statement's own period, where it is not one of the comparatives already.
+  if (!income.periods.some((period) => period.from === data.header.periodFrom && period.to === data.header.periodTo)) {
+    columns.push({ label: "This statement", sub: dayMonth(data.header.periodFrom) + " to " + dayMonth(data.header.periodTo), pnl: data.profitAndLoss, bridge: data.netAssets });
+  }
+  return columns;
+}
+
+function ResultTable({ periods }: { periods: readonly PeriodColumn[] }) {
+  const columns: Column[] = [{ label: "Result", title: true }, ...periods.map((period) => ({ label: period.label, sub: period.sub, w: PERIOD_W, right: true }))];
+  const costless = periods.every((period) => Math.round(period.pnl.fees) === 0 && Math.round(period.pnl.taxes) === 0);
+  const line = (label: string, pick: (pnl: ProfitAndLoss) => number, kind: RowKind = "body", options: { indent?: boolean; coloured?: boolean; last?: boolean } = {}) => (
+    <Row kind={kind} indent={options.indent} last={options.last} cells={[label, ...periods.map((period) => ({ text: figure(pick(period.pnl)), sign: options.coloured ? signOf(pick(period.pnl)) : undefined }))]} />
+  );
+  return (
+    <Table columns={columns} keepTogether dense>
+      {line("Dividends, coupons and interest", (pnl) => pnl.income)}
+      {line("Gains on investments sold or repaid", (pnl) => pnl.realised)}
+      {line("Change in value of investments held", (pnl) => pnl.unrealisedChange)}
+      {line("Result for the period", (pnl) => pnl.result, "total", { coloured: true })}
+      {periods.some((period) => Math.round(period.pnl.currencyEffect) !== 0) ? line("Exchange rates, included above", (pnl) => pnl.currencyEffect) : null}
+      {/* Purchases carry their fees and sales are net of theirs: the costs are already in the result. */}
+      {costless ? (
+        line("Fees and taxes, included above", () => 0, "body", { last: true })
+      ) : (
+        <>
+          {line("Transaction fees, included above", (pnl) => -pnl.fees)}
+          {line("Taxes, included above", (pnl) => -pnl.taxes, "body", { last: true })}
+        </>
+      )}
+    </Table>
+  );
+}
+
+function BridgeTable({ periods }: { periods: readonly PeriodColumn[] }) {
+  const columns: Column[] = [{ label: "Changes in net assets", title: true }, ...periods.map((period) => ({ label: period.label, w: PERIOD_W, right: true }))];
+  const line = (label: string, pick: (bridge: NetAssetsBridge) => number, kind: RowKind = "body", options: { indent?: boolean; last?: boolean } = {}) => (
+    <Row kind={kind} indent={options.indent} last={options.last} cells={[label, ...periods.map((period) => figure(pick(period.bridge)))]} />
+  );
+  return (
+    <Table columns={columns} keepTogether dense>
+      {line("Net assets at the start", (bridge) => bridge.opening, "subtotal")}
+      {line("Money added", (bridge) => bridge.contributions)}
+      {line("Sales and repayments paid out", (bridge) => -bridge.withdrawals)}
+      {line("Income paid out", (bridge) => -bridge.incomePaidOut)}
+      {periods.some((period) => Math.round(period.bridge.movedBetweenProducts) !== 0) ? line("Switches and transfers not yet matched", (bridge) => bridge.movedBetweenProducts) : null}
+      {line("Gains and change in value", (bridge) => bridge.investmentResult)}
+      {line("Dividends, coupons and interest earned", (bridge) => bridge.income)}
+      {line("Net assets at the end", (bridge) => bridge.closing, "total", { last: true })}
+    </Table>
+  );
+}
+
+/* ------------------------------------------------------------------ the document */
+
+type ResultLine = ProfitAndLoss["lines"][number];
+
+export function WealthStatementDocument({ data }: { data: WealthStatementData }) {
+  const { header, party, summary, positions, profitAndLoss: pnl, cashFlow: cash, performance, policy, wealth, comparatives } = data;
+  const analytics = performance.analytics;
+  const compared = comparatives.positions;
+  const [now, monthEnd, yearEnd] = compared.dates.map((item) => item.date);
+  const net = compared.netAssets;
+  const ytd = comparatives.income.statements[comparatives.income.statements.length - 1];
+  const periods = periodColumns(data);
+  const attention = policy ? policy.monitors.filter((monitor) => monitor.tone === "danger" || monitor.tone === "warning") : [];
+  const periodWords = analytics.period === "YTD" ? "year to date" : analytics.period === "1Y" ? "last year" : analytics.period === "1M" ? "last month" : analytics.period === "3M" ? "last three months" : "since first holding";
+  const holdingLines = positions.groups.flatMap((group) => group.lines);
+  const lineFor = (holdingId: string) => holdingLines.find((line) => line.holdingId === holdingId) ?? null;
+
+  const positionColumns: Column[] = [
+    { label: "Holding" },
+    { label: date(now), w: AMOUNT_W, right: true },
+    { label: date(monthEnd), w: AMOUNT_W, right: true },
+    { label: "Change", sub: "Since " + dayMonth(monthEnd), w: CHANGE_W, right: true },
+    { label: date(yearEnd), w: AMOUNT_W, right: true },
+    { label: "Change", sub: "Since " + dayMonth(yearEnd), w: CHANGE_W, right: true },
+    { label: "Weight", w: 50, right: true },
+  ];
+  const comparativeCells = (values: readonly number[], weight: number | null, strong?: boolean): Cell[] => [
+    { text: figure(values[0]), strong },
+    { text: figure(values[1]), strong },
+    { text: figure(values[0] - values[1]), strong },
+    { text: figure(values[2]), strong },
+    { text: figure(values[0] - values[2]), strong },
+    { text: weight === null ? "" : percent(weight, 1), muted: !strong },
+  ];
+
+  // Results by holding, in the order of the holdings, leaving out a column that carries nothing.
+  const results = [...pnl.lines].sort((a, b) => GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group) || a.label.localeCompare(b.label));
+  const carries = (pick: (line: ResultLine) => number) => pnl.lines.some((line) => Math.round(pick(line)) !== 0);
+  const optional = { opening: carries((line) => line.openingValue), sold: carries((line) => line.sales), realised: carries((line) => line.realised), income: carries((line) => line.income) };
+  const resultColumns: { column: Column; cell: (line: ResultLine | null) => Cell }[] = [
+    { column: { label: "Holding" }, cell: (line) => (line ? { text: lineFor(line.key)?.name ?? line.label, sub: [lineFor(line.key)?.className, line.group].filter(Boolean).join(", ") } : "Total") },
+    ...(optional.opening ? [{ column: { label: "Opening", w: AMOUNT_W, right: true }, cell: (line: ResultLine | null) => figure(line ? line.openingValue : pnl.openingValue) }] : []),
+    { column: { label: "Bought", w: AMOUNT_W, right: true }, cell: (line) => figure(line ? line.purchases : pnl.purchases) },
+    ...(optional.sold ? [{ column: { label: "Sold", w: AMOUNT_W, right: true }, cell: (line: ResultLine | null) => figure(line ? line.sales : pnl.sales) }] : []),
+    { column: { label: "Closing", w: AMOUNT_W, right: true }, cell: (line) => figure(line ? line.closingValue : pnl.closingValue) },
+    ...(optional.realised ? [{ column: { label: "Gains on sales", w: CHANGE_W, right: true }, cell: (line: ResultLine | null) => ({ text: figure(line ? line.realised : pnl.realised), sign: signOf(line ? line.realised : pnl.realised) }) }] : []),
+    { column: { label: "Change in value", w: CHANGE_W, right: true }, cell: (line) => ({ text: figure(line ? line.unrealisedChange : pnl.unrealisedChange), sign: signOf(line ? line.unrealisedChange : pnl.unrealisedChange) }) },
+    ...(optional.income ? [{ column: { label: "Interest", w: 76, right: true }, cell: (line: ResultLine | null) => figure(line ? line.income : pnl.income) }] : []),
+    { column: { label: "Result", w: CHANGE_W, right: true }, cell: (line) => ({ text: figure(line ? line.result : pnl.result), sign: signOf(line ? line.result : pnl.result) }) },
+  ];
+
+  const accountColumns: Column[] = [{ label: "Account" }, { label: "Number", w: 96 }, { label: "Balance", w: 104, right: true }];
+  const elsewhereColumns: Column[] = [{ label: "Asset" }, { label: "Value", w: 104, right: true }];
+  const flowColumns: Column[] = [{ label: "Date", w: 70 }, { label: "Description" }, { label: "Amount", w: 100, right: true }];
+
+  return (
+    <Document title={header.title + ", " + party.name + ", " + header.periodTo} author={header.institutionName} subject={"Consolidated statement for " + party.name + ", " + date(header.periodFrom) + " to " + date(header.periodTo)} creator={header.institutionName}>
+      <Brand.Provider value={header.palette}>
+        {/* ------------------------------------------------ overview */}
+        <Sheet data={data} title="Overview" description={"Your investments with the bank for " + date(header.periodFrom) + " to " + date(header.periodTo) + ", valued at " + date(header.asOf) + " and compared with " + date(monthEnd) + " and " + date(yearEnd) + "."}>
+          <View style={[s.strip, { marginBottom: 14 }]} wrap={false}>
+            {[
+              { label: "Prepared for", value: party.name },
+              { label: "Customer number", value: party.code },
+              { label: "Relationship manager", value: party.relationshipManager ?? "Not assigned" },
+              { label: "Risk profile", value: party.riskProfile, note: party.riskProfileValidUntil ? "Valid to " + date(party.riskProfileValidUntil) : undefined },
+              { label: "Currency", value: "Indonesian rupiah" },
+            ].map((item) => (
+              <View key={item.label} style={s.figure}>
+                <Text style={s.figureLabel}>{item.label}</Text>
+                <Text style={{ fontSize: 9.5, fontWeight: 600, marginTop: 4 }}>{item.value}</Text>
+                {item.note ? <Text style={s.figureNote}>{item.note}</Text> : null}
+              </View>
+            ))}
+          </View>
+
+          <View style={{ marginBottom: 18 }}>
+            <FigureStrip
+              cells={[
+                { label: "Net assets", value: amount(net[0]), note: "Investments and interest earned" },
+                { label: "Change since " + date(monthEnd), value: amount(net[0] - net[1]), note: changeRatio(net[0], net[1]) ? changeRatio(net[0], net[1]) + ", money added included" : "Nothing held at the month end" },
+                { label: "Change since " + date(yearEnd), value: amount(net[0] - net[2]), note: changeRatio(net[0], net[2]) ? changeRatio(net[0], net[2]) + ", money added included" : "Nothing held at the year end" },
+                { label: "Result, year to date", value: amount(ytd.result), sign: signOf(ytd.result), note: "After fees and taxes" },
+                {
+                  label: "Return, " + periodWords,
+                  value: signedPercent(summary.periodMoneyWeighted),
+                  sign: signOf(summary.periodMoneyWeighted, 2),
+                  note: "On the money at work" + (summary.periodReturn === null ? "" : ". Time weighted " + signedPercent(summary.periodReturn) + (summary.periodBenchmark === null ? "" : ", benchmark " + signedPercent(summary.periodBenchmark))),
+                },
+              ]}
+            />
+          </View>
+
+          <View style={s.row} wrap={false}>
+            <View style={[s.card, { width: HALF_W }]}>
+              <Text style={s.cardTitle}>Allocation by asset class</Text>
+              <AllocationBar items={data.allocation} />
+            </View>
+            <View style={[s.card, { width: HALF_W }]}>
+              <Text style={s.cardTitle}>Total wealth recorded</Text>
+              <KeyValues
+                rows={[
+                  { term: "Investments with the bank", value: amount(summary.totalRelationshipBalance) },
+                  { term: "Interest earned, not yet paid", value: amount(summary.accruedIncome) },
+                  { term: "Cash in bank accounts", value: wealth.position.cashKnown ? amount(wealth.position.cashAtBank) : "Not shared" },
+                  { term: "Assets held elsewhere, at recorded value", value: figure(wealth.position.heldElsewhere) },
+                  { term: "Total wealth recorded", value: amount(wealth.position.netWorth), strong: true },
+                ]}
+              />
+              <Text style={s.note}>Assets held elsewhere are recorded by your relationship manager and are not priced by the bank.</Text>
+            </View>
+          </View>
+        </Sheet>
+
+        {/* ------------------------------------------------ coming up and attention */}
+        {data.maturities.length > 0 || attention.length > 0 ? (
+          <Sheet data={data} title="Coming up" description="Maturities ahead, and anything in the investment policy that calls for a conversation.">
+            {data.maturities.length > 0 ? (
+              <Section title="Maturities" meta={data.maturities.length + (data.maturities.length === 1 ? " position" : " positions")} keepTogether>
+                <Table columns={[{ label: "Investment" }, { label: "Matures on", w: 110 }, { label: "In days", w: 80, right: true }, { label: "Amount", w: 120, right: true }]} keepTogether>
+                  {data.maturities.map((item, index) => (
+                    <Row key={item.name + item.date} last={index === data.maturities.length - 1} cells={[item.name, date(item.date), amountFormat.format(item.days), amount(item.amount)]} />
+                  ))}
+                </Table>
+              </Section>
+            ) : null}
+            {attention.length > 0 ? (
+              <Section title="Needs attention" meta={"Against " + (policy?.reference ?? "the policy")} keepTogether>
+                <Table columns={[{ label: "Monitor", w: 190 }, { label: "Reading" }, { label: "Limit or objective", w: 240 }, { label: "State", w: 130 }]} keepTogether>
+                  {attention.map((monitor, index) => (
+                    <Row key={monitor.key} last={index === attention.length - 1} cells={[monitor.name, monitor.measure, { text: monitor.limit, muted: true }, <Tag key="tag" tone={monitorTone(monitor.tone)}>{monitor.state}</Tag>]} />
+                  ))}
+                </Table>
+              </Section>
+            ) : null}
+          </Sheet>
+        ) : null}
+
+        {/* ------------------------------------------------ statement of positions */}
+        <Sheet data={data} title="Statement of positions" description={"Market value of what is held for you on " + date(now) + ", beside the last month end and the last year end."}>
+          <Table columns={positionColumns}>
+            {compared.groups.map((group, index) => {
+              const rows = (
+                <>
+                  <Row kind="group" cells={[group.label]} />
+                  {group.rows.map((row) => (
+                    <Row key={row.key} indent cells={[row.label, ...comparativeCells(row.values, lineFor(row.key)?.weight ?? null)]} />
+                  ))}
+                  <Row kind="subtotal" cells={["Total " + group.label.toLowerCase(), ...comparativeCells(group.totals, null, true)]} />
+                </>
+              );
+              const lastGroup = index === compared.groups.length - 1;
+              return (
+                <View key={group.label} wrap={group.rows.length > 12}>
+                  {rows}
+                  {lastGroup ? (
+                    <>
+                      <Row kind="total" cells={["Total relationship balance", ...comparativeCells(compared.totalRelationshipBalance, 100, true)]} />
+                      <Row cells={["Interest earned, not yet paid", ...comparativeCells(compared.accruedIncome, null)]} />
+                      <Row kind="total" last cells={["Net assets", ...comparativeCells(net, null, true)]} />
+                      <Text style={s.note}>Each column is valued at the prices published for that date. A dash is nil: nothing was held on that date. A change is the movement in value, money added and taken out included; the profit and loss separates the two.</Text>
+                    </>
+                  ) : null}
+                </View>
+              );
+            })}
+          </Table>
+        </Sheet>
+
+        {/* ------------------------------------------------ holdings, accounts, assets held elsewhere */}
+        <Sheet data={data} title="Holdings" description={"Every position on " + date(positions.asOf) + ", with its units, price, cost and gain or loss on paper."}>
+          <Section title="Investments with the bank" meta={summary.holdings + (summary.holdings === 1 ? " holding" : " holdings")}>
+            {(() => {
+              const columns: Column[] = [
+                { label: "Holding" },
+                { label: "Units", w: 80, right: true },
+                { label: "Price", w: 62, right: true },
+                { label: "Market value", w: AMOUNT_W, right: true },
+                { label: "Interest earned", w: 70, right: true },
+                { label: "Cost", w: AMOUNT_W, right: true },
+                { label: "Gain or loss", w: CHANGE_W, right: true },
+                { label: "Weight", w: 50, right: true },
+              ];
+              return (
+                <Table columns={columns}>
+                  {positions.groups.map((group) => (
+                    <View key={group.label} wrap={group.lines.length > 12}>
+                      <Row kind="group" cells={[group.label, "", "", figure(group.value)]} />
+                      {group.lines.map((line) => (
+                        <Row
+                          key={line.holdingId}
+                          indent
+                          cells={[
+                            { text: line.name, sub: [line.className, line.classification.familyLabel, line.earmarkedUnits > 0 ? quantityFormat.format(line.earmarkedUnits) + " units set aside" : null].filter(Boolean).join(", ") },
+                            quantityFormat.format(line.units),
+                            price(line),
+                            figure(line.marketValue ?? 0),
+                            figure(line.accruedInterest),
+                            figure(line.cost),
+                            { text: figure(line.unrealisedGain), sign: signOf(line.unrealisedGain) },
+                            { text: percent(line.weight, 1), muted: true },
+                          ]}
+                        />
+                      ))}
+                    </View>
+                  ))}
+                  <Row kind="total" last cells={["Total", "", "", amount(positions.totalRelationshipBalance), amount(positions.accruedIncome), amount(positions.totalCost), { text: amount(positions.unrealised), sign: signOf(positions.unrealised) }, "100.0%"]} />
+                </Table>
+              );
+            })()}
+            <Text style={s.note}>Prices: a mutual fund at its class NAV per unit; a bond at its clean price per hundred, interest earned shown apart; a deposit at principal with interest from the day placed; a listed fund at its close; a structured product at its quote, else at par.</Text>
+          </Section>
+
+          <View style={s.row} wrap={false}>
+            <View style={{ width: HALF_W }}>
+              <Section title="Bank accounts" meta="Beside the relationship balance, not in it">
+                {data.accounts.length === 0 ? (
+                  <Empty>No bank account is recorded against the relationship.</Empty>
+                ) : (
+                  <Table columns={accountColumns} width={HALF_W} keepTogether>
+                    {data.accounts.map((account, index) => (
+                      <Row
+                        key={account.number}
+                        last={index === data.accounts.length - 1}
+                        cells={[
+                          { text: account.label, sub: account.kind + ", " + (account.connected ? "read from core banking" : "not connected") },
+                          account.number,
+                          { text: account.balance === null ? "Not shared" : (account.currency === "IDR" ? "" : account.currency + " ") + amount(account.balance), sub: account.balanceAsOf ? "As of " + date(account.balanceAsOf) : null },
+                        ]}
+                      />
+                    ))}
+                  </Table>
+                )}
+              </Section>
+            </View>
+            <View style={{ width: HALF_W }}>
+              <Section title="Assets held elsewhere" meta="At recorded value, not priced">
+                {data.heldElsewhere.length === 0 ? (
+                  <Empty>None recorded. Your relationship manager can record property, holdings at other institutions and other assets, so this statement shows your whole wealth.</Empty>
+                ) : (
+                  <Table columns={elsewhereColumns} width={HALF_W} keepTogether>
+                    {data.heldElsewhere.map((asset) => (
+                      <Row key={asset.name + asset.valueAsOf} cells={[{ text: asset.name, sub: [asset.kind + (asset.heldAt ? ", " + asset.heldAt : ""), asset.note].filter(Boolean).join(". ") }, { text: amount(asset.value), sub: "As of " + date(asset.valueAsOf) }]} />
+                    ))}
+                    <Row kind="total" last cells={["Total", amount(wealth.position.heldElsewhere)]} />
+                  </Table>
+                )}
+              </Section>
+            </View>
+          </View>
+        </Sheet>
+
+        {/* ------------------------------------------------ profit and loss */}
+        <Sheet data={data} title="Profit and loss" description="What your investments with the bank earned in each period, and how net assets moved.">
+          <View style={{ marginBottom: 14 }} wrap={false}>
+            <ResultTable periods={periods} />
+          </View>
+          <View wrap={false}>
+            <BridgeTable periods={periods} />
+            <Text style={s.note}>Interest is counted in the period it was earned; a change in value of what is still held is a gain or loss on paper until sold. Money added is what you paid, fees included, and money taken out what you received, after fees.</Text>
+          </View>
+        </Sheet>
+
+        {/* ------------------------------------------------ results by holding */}
+        <Sheet data={data} title="Results by holding" description={"The result on each investment from " + date(pnl.from) + " to " + date(pnl.to) + ": gains on sales, the change in value of what is held and interest earned, less fees and taxes."}>
+          {results.length === 0 ? (
+            <Empty>Nothing was held or dealt in this period.</Empty>
+          ) : (
+            <View>
+              <Table columns={resultColumns.map((item) => item.column)}>
+                {results.map((line) => (
+                  <Row key={line.key} cells={resultColumns.map((item) => item.cell(line))} />
+                ))}
+                <Row kind="total" last cells={resultColumns.map((item) => item.cell(null))} />
+              </Table>
+              <Text style={s.note}>
+                {pnl.fees + pnl.taxes > 0 ? "Fees of " + amount(pnl.fees) + (pnl.taxes > 0 ? " and taxes of " + amount(pnl.taxes) : "") + " on the period's transactions and income are already inside the gains and income. " : ""}
+                {!optional.sold ? "Nothing was sold in the period. " : ""}Nothing outside the register is included.
+              </Text>
+            </View>
+          )}
+        </Sheet>
+
+        {/* ------------------------------------------------ cash flow */}
+        <Sheet data={data} title="Cash flow" description={"Cash that moved through your accounts and into or out of your investments from " + date(cash.from) + " to " + date(cash.to) + "."}>
+          <View style={{ marginBottom: 18 }}>
+            <FigureStrip
+              cells={[
+                { label: "Money in", value: amount(cash.operatingInflows), note: "Income received" },
+                { label: "Money out", value: amount(cash.operatingOutflows), note: "Spending and commitments" },
+                { label: "Invested", value: amount(cash.investedIntoPortfolio), note: "Into your investments" },
+                { label: "Returned", value: amount(cash.returnedFromPortfolio + cash.incomeFromPortfolio), note: "Sales, maturities and income" },
+                { label: "Net cash flow", value: amount(cash.netCashFlow), note: cash.connectedAccounts === 0 ? "Recorded by your manager" : cash.connectedAccounts === data.accounts.length ? "All from core banking" : cash.connectedAccounts + " of " + data.accounts.length + " from core banking" },
+              ]}
+            />
+          </View>
+          <View style={s.row}>
+            <View style={{ width: HALF_W }}>
+              <Section title="Operating activities" meta={"Net " + amount(cash.netOperating)}>
+                {cash.operating.length === 0 ? (
+                  <Empty>No operating flow in this period.</Empty>
+                ) : (
+                  <Table columns={flowColumns} width={HALF_W}>
+                    {cash.operating.map((row, index) => (
+                      <Row key={row.key} last={index === cash.operating.length - 1} cells={[date(row.date), { text: row.label, sub: row.category + ", " + (row.source === "CORE_BANKING" ? "core banking" : "manual entry") }, amount(row.amount)]} />
+                    ))}
+                  </Table>
+                )}
+              </Section>
+            </View>
+            <View style={{ width: HALF_W }}>
+              <Section title="Investing activities" meta={"Net " + amount(cash.netInvesting)}>
+                {cash.investing.length === 0 ? (
+                  <Empty>Nothing settled in this period.</Empty>
+                ) : (
+                  <Table columns={flowColumns} width={HALF_W}>
+                    {cash.investing.map((row, index) => (
+                      <Row key={row.key} last={index === cash.investing.length - 1} cells={[date(row.date), { text: row.label, sub: row.reference }, amount(row.amount)]} />
+                    ))}
+                  </Table>
+                )}
+              </Section>
+            </View>
+          </View>
+          <Text style={[s.note, { marginTop: 0 }]}>Money into your investments is shown as an outflow from cash and money returned as an inflow. Operating flows are shown as they reached the accounts.</Text>
+        </Sheet>
+
+        {/* ------------------------------------------------ performance and risk */}
+        <Sheet data={data} title="Performance and risk" description={"The " + periodWords + ", " + date(analytics.from) + " to " + date(analytics.to) + ", on " + analytics.observations + " business days, against " + performance.benchmarkLabel + "."}>
+          <View style={[s.card, { marginBottom: 18 }]} wrap={false}>
+            <IndexChart portfolio={performance.index} benchmark={performance.benchmark} width={CONTENT_W - 30} height={132} />
+          </View>
+          <View style={s.row} wrap={false}>
+            {(() => {
+              const riskW = 232;
+              const contributionW = 272;
+              const issuerW = CONTENT_W - GAP * 2 - riskW - contributionW;
+              const riskColumns: Column[] = [{ label: "Measure" }, { label: "Portfolio", w: 58, right: true }, { label: "Benchmark", w: 62, right: true }];
+              const riskRows = [
+                { label: "Period return", p: signedPercent(analytics.portfolioReturn), b: signedPercent(analytics.benchmarkReturn), sign: signOf(analytics.portfolioReturn, 2) },
+                { label: "Annualized return", p: signedPercent(analytics.annualizedReturn), b: "", sign: signOf(analytics.annualizedReturn, 2) },
+                { label: "Annualized volatility", p: percent(analytics.volatility), b: percent(analytics.benchmarkVolatility) },
+                { label: "Maximum drawdown", p: analytics.drawdown.maximum > 0 ? "-" + percent(analytics.drawdown.maximum) : percent(0), b: "" },
+                { label: "Sharpe ratio", p: analytics.sharpe === null ? "" : analytics.sharpe.toFixed(2), b: "" },
+                { label: "Tracking error", p: percent(analytics.trackingError), b: "" },
+                { label: "Information ratio", p: analytics.informationRatio === null ? "" : analytics.informationRatio.toFixed(2), b: "" },
+              ];
+              const contributionColumns: Column[] = [{ label: "Asset class" }, { label: "Weight", w: 48, right: true }, { label: "Return", w: 54, right: true }, { label: "Contribution", w: 66, right: true }];
+              const issuerColumns: Column[] = [{ label: "Largest issuers" }, { label: "Weight", w: 46, right: true }];
+              return (
+                <>
+                  <View style={{ width: riskW }}>
+                    <Table columns={riskColumns} width={riskW} keepTogether>
+                      {riskRows.map((row, index) => (
+                        <Row key={row.label} last={index === riskRows.length - 1} cells={[row.label, { text: row.p, sign: "sign" in row ? row.sign : undefined }, { text: row.b, muted: true }]} />
+                      ))}
+                    </Table>
+                  </View>
+                  <View style={{ width: contributionW }}>
+                    <Table columns={contributionColumns} width={contributionW} keepTogether>
+                      {performance.byClass.map((row, index) => (
+                        <Row key={row.label} last={index === performance.byClass.length - 1} cells={[row.label, { text: percent(row.weight, 1), muted: true }, { text: signedPercent(row.returnPercent), sign: signOf(row.returnPercent, 2) }, { text: signedPercent(row.contributionPp), sign: signOf(row.contributionPp, 2) }]} />
+                      ))}
+                    </Table>
+                  </View>
+                  <View style={{ width: issuerW }}>
+                    <Table columns={issuerColumns} width={issuerW} keepTogether>
+                      {data.issuers.map((item, index) => (
+                        <Row key={item.issuer} last={index === data.issuers.length - 1} cells={[item.issuer, { text: percent(item.weight, 1), muted: true }]} />
+                      ))}
+                    </Table>
+                  </View>
+                </>
+              );
+            })()}
+          </View>
+          <Text style={s.note}>Returns by asset class use the modified Dietz method over the period; a contribution is in percentage points of the portfolio return.</Text>
+        </Sheet>
+
+        {/* ------------------------------------------------ goals and the policy statement */}
+        <Sheet data={data} title="Goals and investment policy" description="What each goal has set aside and its chance of reaching its target, and how the portfolio stands against the investment policy statement.">
+          <Section title="Goals and sub-portfolios" keepTogether>
+            {data.goals.length === 0 ? (
+              <Empty>No goal or sub-portfolio has been set up. The whole relationship is the main portfolio.</Empty>
+            ) : (
+              <Table columns={[{ label: "Portfolio" }, { label: "Set aside", w: 104, right: true }, { label: "Target", w: 104, right: true }, { label: "By", w: 80 }, { label: "Funded", w: 58, right: true }, { label: "Chance", w: 58, right: true }, { label: "Standing", w: 110 }]} keepTogether>
+                {data.goals.map((goal, index) => (
+                  <Row
+                    key={goal.name}
+                    last={index === data.goals.length - 1}
+                    cells={[
+                      { text: goal.name, sub: [goal.kind === "GOAL" ? "Goal" : "General", goal.model ? "under " + goal.model : null, goal.plan].filter(Boolean).join(", ") },
+                      { text: amount(goal.value), sub: goal.holdings + (goal.holdings === 1 ? " holding" : " holdings") },
+                      goal.target === null ? "" : amount(goal.target),
+                      date(goal.targetDate),
+                      goal.fundedPercent === null ? "" : percent(goal.fundedPercent, 0),
+                      goal.probability === null ? "" : percent(goal.probability * 100, 0),
+                      goal.status ? <Tag key="tag" tone={goal.status === "On track" || goal.status === "Reached" ? "success" : goal.status === "Needs attention" ? "warning" : goal.status === "Off track" || goal.status === "Past its date" ? "danger" : "neutral"}>{goal.status}</Tag> : "",
+                    ]}
+                  />
+                ))}
+              </Table>
+            )}
+          </Section>
+
+          {policy ? (
+            <>
+              <Section title="Investment policy statement" meta={policy.reference + ", version " + policy.version} keepTogether>
+                <View style={[s.card, s.row, { gap: 36 }]}>
+                  <View style={{ flex: 1 }}>
+                    <KeyValues
+                      rows={[
+                        { term: "Strategic allocation", value: policy.model },
+                        { term: "Risk tolerance", value: policy.tolerance + " (willingness " + policy.willingness.toLowerCase() + ", ability " + policy.ability.toLowerCase() + ")" },
+                        { term: "Return objective", value: policy.returnObjective },
+                        { term: "Risk objective", value: policy.riskObjective },
+                      ]}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <KeyValues
+                      rows={[
+                        { term: "Liquidity need", value: amount(policy.liquidityNeed) + " within a month" },
+                        { term: "Time horizon", value: policy.horizonYears + " years" },
+                        { term: "In force from", value: date(policy.effectiveFrom) },
+                        { term: "Signed", value: date(policy.signedOn) + " by " + policy.signedBy },
+                        { term: "Next review", value: date(policy.reviewDate) },
+                      ]}
+                    />
+                  </View>
+                </View>
+              </Section>
+              <Section title="Standing against the statement" keepTogether={policy.monitors.length <= 12}>
+                <Table columns={[{ label: "Monitor", w: 180 }, { label: "Reading" }, { label: "Limit or objective", w: 250 }, { label: "State", w: 130 }]} keepTogether={policy.monitors.length <= 12} dense>
+                  {policy.monitors.map((monitor, index) => (
+                    <Row key={monitor.key} last={index === policy.monitors.length - 1} cells={[monitor.name, monitor.measure, { text: monitor.limit, muted: true }, <Tag key="tag" tone={monitorTone(monitor.tone)}>{monitor.state}</Tag>]} />
+                  ))}
+                </Table>
+                {policy.breaches.length > 0 ? <Text style={s.note}>Outside the guidelines: {policy.breaches.map((breach) => breach.replace(/\.+$/, "")).join("; ")}.</Text> : null}
+              </Section>
+              {policy.drift ? (
+                <Section title={"Allocation against " + policy.model} keepTogether>
+                  <Table columns={[{ label: "Asset class" }, { label: "Target", w: 80, right: true }, { label: "Band", w: 120, right: true }, { label: "Actual", w: 80, right: true }, { label: "Deviation", w: 90, right: true }, { label: "State", w: 130 }]} keepTogether dense>
+                    {policy.drift.rows.map((row, index, rows) => (
+                      <Row
+                        key={row.assetClass}
+                        last={index === rows.length - 1}
+                        cells={[
+                          row.label,
+                          row.target === null ? "" : percent(row.target, 0),
+                          row.minimum === null ? "" : percent(row.minimum, 0) + " to " + percent(row.maximum ?? 0, 0),
+                          percent(row.actual, 1),
+                          row.deviationPp === null ? "" : (row.deviationPp > 0 ? "+" : "") + row.deviationPp.toFixed(1) + " pt",
+                          <Tag key="tag" tone={row.status === "OUTSIDE" ? "danger" : row.status === "NEAR" ? "warning" : row.status === "WITHIN" ? "success" : "neutral"}>
+                            {row.status === "OUTSIDE" ? "Outside band" : row.status === "NEAR" ? "Near the edge" : row.status === "WITHIN" ? "Within band" : "Not in model"}
+                          </Tag>,
+                        ]}
+                      />
+                    ))}
+                  </Table>
+                  <Text style={s.note}>{policy.drift.status === "WITHIN" ? "Every class sits inside its band." : percent(policy.drift.turnoverPercent, 1) + " of the portfolio would move to return every class to its target."} A reading outside a band is a reason for a conversation, not an instruction.</Text>
+                </Section>
+              ) : null}
+            </>
+          ) : (
+            <Section title="Investment policy statement">
+              <Empty>No investment policy statement is in force. {data.referenceModel ? "The allocation is read against " + data.referenceModel + ", the bank's reference model for your risk profile, for information only." : "Without a usable risk profile there is no model to read the allocation against."}</Empty>
+            </Section>
+          )}
+        </Sheet>
+
+        {/* ------------------------------------------------ basis of preparation */}
+        <Sheet data={data} title="Basis of preparation" description="How the figures in this statement are produced. The same calculations drive the bank's own screens, so the statement and the record it is taken from cannot disagree.">
+          <View style={[s.row, { gap: 28 }]}>
+            <View style={{ flex: 1 }}>
+              <Prose title="Source and scope">
+                The statement is drawn from the bank&apos;s register of units and nominal held on your behalf as selling agent, the settled movements behind each position, the prices published for each product, and the bank accounts you have connected. Assets you hold elsewhere appear where your relationship manager recorded them, at the value recorded; the bank does not price them and they are not part of the performance figures. The valuation date is the bank&apos;s business date, {date(header.asOf)}.
+              </Prose>
+              <Prose title="Valuation">
+                Each position is valued at the last price available on or before the valuation date: a mutual fund at the net asset value per unit of its share class; a bond or sukuk at its clean price per hundred of nominal, with interest earned shown separately; a time deposit at principal, with interest from the day it was placed; a listed fund at its closing price; a structured product at its quote where one exists and otherwise at par.
+              </Prose>
+              <Prose title="Comparatives">
+                Positions are shown on the valuation date, the last day of the previous month and the last day of the previous year, each at the prices published for that date and the units held that day. The result is shown for the month to date, the whole previous month and the year to date{periods.length > 3 ? ", with this statement's own period beside them" : ""}.
+              </Prose>
+              <Prose title="Relationship balance and net assets">
+                The total relationship balance is the market value of the securities and placements held for you. Net assets add interest earned and not yet paid. Cash in bank accounts is reported beside the balance and never inside it. Units set aside for a goal remain part of the balance.
+              </Prose>
+              <Prose title="Result">
+                Interest is counted in the period it was earned. A gain on a sale is the proceeds less the average cost of the units sold. The change in value of what is still held is the rest of the movement in value once money added and taken out are removed. Fees and taxes are those charged on the period&apos;s transactions.
+              </Prose>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Prose title="Time weighted return">
+                Daily returns are taken with the day&apos;s contributions and withdrawals removed, so money moving in or out is not counted as performance, and are chain linked into an index that starts at 100. This is the method used to judge a manager or a strategy.
+              </Prose>
+              <Prose title="Benchmark">
+                The portfolio is compared with {performance.benchmarkSource === "POLICY_BENCHMARK" ? "the benchmark named in your investment policy statement" : performance.benchmarkSource === "POLICY_MODEL" ? "the benchmark of the model portfolio named in your investment policy statement" : performance.benchmarkSource === "REFERENCE_MODEL" ? "the benchmark of the bank's reference model for your risk profile, since no statement is in force" : "your own allocation held constant, since no model applies"}
+                {performance.benchmarkNamed ? ", " + performance.benchmarkLabel + ", rebased to 100 on the first day of the period." : ", each asset class represented by a proxy series at the model's target weights."} Fees are not deducted from the benchmark.
+              </Prose>
+              <Prose title="Risk measures">
+                Volatility is the annualized standard deviation of daily returns on {performance.tradingDays} trading days a year. The Sharpe ratio uses a risk free rate of {percent(performance.riskFreeRate)} a year. Maximum drawdown is the deepest fall from a running peak in the period. Tracking error and the information ratio are measured against the benchmark.
+              </Prose>
+              <Prose title="Goals">
+                A goal&apos;s chance of success is the share of outcomes that reach its target by its date in a simulation of monthly returns drawn from the expected return and volatility of the model it is measured against, with the contributions of its plan.
+              </Prose>
+              <Prose title="Cash flow">
+                Operating flows are read from bank accounts connected to core banking and from entries your relationship manager recorded where the bank cannot see the account. Investing flows are settlements in the register. Amounts are whole rupiah and columns add to their totals.
+              </Prose>
+            </View>
+          </View>
+        </Sheet>
+
+        {/* ------------------------------------------------ important information */}
+        <Sheet data={data} title="Important information">
+          <View style={[s.row, { gap: 28 }]}>
+            <View style={{ flex: 1 }}>
+              <Prose title="About this statement">
+                This statement is issued by {header.institutionName} as selling agent for the investment products it distributes and as the bank holding the accounts shown. It is for your information and records only. It is not an offer, a solicitation or a recommendation to buy, sell or hold any product, and it is not investment, legal or tax advice.
+              </Prose>
+              <Prose title="Product risk">
+                Mutual funds, bonds, sukuk, listed funds and structured products are capital market products. They are not bank deposits, are not guaranteed by the bank, and are not covered by the Indonesia Deposit Insurance Corporation (Lembaga Penjamin Simpanan). Their value can fall as well as rise, and past performance is not a reliable indicator of future results. Mutual funds are managed by investment managers licensed and supervised by the Financial Services Authority (Otoritas Jasa Keuangan).
+              </Prose>
+              <Prose title="Valuations and figures">
+                Values are indicative and may differ from the amount realised on sale, redemption or maturity. Interest earned and not yet paid is an estimate and is subject to the issuer paying it. Expected returns, simulated outcomes and goal probabilities are estimates, not promises of any outcome.
+              </Prose>
+              <Prose title="Tax">Dividends, coupons and interest are shown after the tax withheld at source, and sale proceeds after the fees and tax charged on them. Interest earned and not yet paid is shown before tax. The bank does not provide tax advice.</Prose>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Prose title="Checking this statement">
+                Please check this statement carefully. If any entry looks wrong, or you do not recognise a transaction, contact your relationship manager or the bank&apos;s customer service within thirty days of the statement date. The bank&apos;s records are conclusive in the absence of manifest error.
+              </Prose>
+              <Prose title="Confidentiality">This document is confidential and intended solely for the client named on it. If you have received it in error, please tell the bank and destroy it.</Prose>
+              <Prose title="Complaints">
+                Complaints may be raised with your relationship manager or the bank&apos;s customer service. If the response does not resolve your complaint you may refer it to the Financial Services Authority or the alternative dispute resolution body for the financial services sector.
+              </Prose>
+              <View style={[s.card, { marginTop: 4 }]}>
+                <Text style={s.cardTitle}>Terms used</Text>
+                <KeyValues
+                  rows={[
+                    { term: "Net assets", value: "Market value and interest earned" },
+                    { term: "Gain or loss on paper", value: "Value against cost, until sold" },
+                    { term: "Time weighted return", value: "Return with your own flows removed" },
+                    { term: "Drawdown", value: "The fall from a previous peak" },
+                    { term: "Recorded value", value: "A value noted, not a market price" },
+                  ]}
+                />
+              </View>
+            </View>
+          </View>
+          <Text style={[s.note, { marginTop: 16, paddingTop: 10, borderTopWidth: HAIRLINE, borderTopColor: BORDER }]}>
+            {header.institutionName}, {header.institutionContext}. Licensed and supervised by the Financial Services Authority (Otoritas Jasa Keuangan) and a member of the Indonesia Deposit Insurance Corporation for deposits. Generated electronically on {dateTime(header.generatedAt)} by {header.preparedBy}; no signature is required.
+          </Text>
+        </Sheet>
+      </Brand.Provider>
+    </Document>
+  );
+}

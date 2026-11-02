@@ -1,0 +1,6 @@
+node_modules/
+# Build outputs sit beside each deck; the worked examples' finished files are kept in references/.
+**/output/
+*.log
+.DS_Store
+~$*.pptx
