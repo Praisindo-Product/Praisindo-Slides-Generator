@@ -29,7 +29,8 @@ Before any work, tell the person, in their language:
 > the client's branding, and prepare the deck file so your local Claude Code (or a colleague's)
 > builds it in one step. I can't produce the final PDF or PowerPoint here.
 
-Mention Claude Code on the web (claude.ai/code) if the person has GitHub access to Praisindo-Product.
+Mention Claude Code on the web (claude.ai/code) as the remote option: it can open this repository,
+which is public (github.com/Praisindo-Product/Praisindo-Slides-Generator).
 
 ## 2. The minimum service, if they want it
 

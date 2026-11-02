@@ -25,8 +25,8 @@ Inside the shell, the layout and visuals are designed for each deck's content.
 The generator runs on your computer, in Claude Code, which is what lets it build the files in the
 house style and check every slide. In a general Claude chat it cannot run: the chat says so, and if
 you still want help there, it plans the deck, writes the content, sorts out the client's branding
-and prepares a deck file for you to build later (`guides/chat-entry.md`). With GitHub access you can
-also use Claude Code on the web (claude.ai/code) with this repository.
+and prepares a deck file for you to build later (`guides/chat-entry.md`). You can also use Claude
+Code on the web (claude.ai/code) with this repository, which is public.
 
 ## Setup
 
