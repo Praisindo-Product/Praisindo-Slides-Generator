@@ -18,7 +18,9 @@ These are the house look. Do not change them per deck.
   engine draws it; never restyle, resize, recolour or remove it.
 - **The look and feel of the design system.** Libre Franklin; the light theme's tokens on white
   paper; hairline borders, the card and table language, the type scale, sentence case; dark theme
-  for the cover and closing slide only. Charts follow the design system's colour rules.
+  for the cover and closing slide only. Charts follow the design system's colour rules. The scale is
+  sized for reading on a device; a deck presented in a room sets its body and labels larger inside the
+  frame, keeping the same hierarchy (`presentation-principles.md`, section 6).
 - **Client branding from the registry.** The client's logo and colours come from
   `engine/clients.ts` through the deck context (`useDeck().client`, `useDeck().inks`), never as
   hex values in a deck. A deck rebuilt with `--client` for another institution must still look right.
@@ -28,7 +30,9 @@ These are the house look. Do not change them per deck.
 ## Yours to decide: everything inside the shell
 
 The story, the number and order of slides, the layout of each slide, the kind of visual, the
-density. Choose what serves the content and the audience.
+density. Choose what serves the content, the audience and the setting.
+`presentation-principles.md` collects what consulting practice and research say about each of these
+choices; use it to decide, not as a template.
 
 - The engine's components (cards, tables, statement tables, figure strips, step tracks, diagrams)
   are a starting toolkit, not a menu. When the content wants something else, build it with

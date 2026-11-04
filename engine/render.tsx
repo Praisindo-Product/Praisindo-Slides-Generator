@@ -129,6 +129,32 @@ async function contactSheets(images: Buffer[], dir: string): Promise<number> {
   return sheet;
 }
 
+const SPEAKING_RATE = 140;
+
+/** The speaker script as plain text, one block per slide with a speaking time at 140 words a minute; undefined when no slide has one. */
+function scriptText(deck: Deck, client: ClientBrand): string | undefined {
+  if (!deck.slides.some((slide) => slide.script?.trim())) return undefined;
+  const en = deck.meta.language === "en";
+  const words = (text: string) => text.split(/\s+/).filter(Boolean).length;
+  const seconds = (text: string) => Math.max(10, Math.round(((words(text) / SPEAKING_RATE) * 60) / 5) * 5);
+  const total = deck.slides.reduce((sum, slide) => sum + (slide.script?.trim() ? seconds(slide.script) : 0), 0);
+  const lines = [
+    deck.meta.title + (client.id === "praisindo" ? "" : " - " + client.name),
+    (en ? "Speaker script, " : "Naskah presentasi, ") + [deck.meta.place, deck.meta.date].filter(Boolean).join(", "),
+    (en ? "About " + Math.max(1, Math.round(total / 60)) + " minutes spoken, at " : "Sekitar " + Math.max(1, Math.round(total / 60)) + " menit bicara, dengan ") + SPEAKING_RATE + (en ? " words a minute." : " kata per menit."),
+    "",
+  ];
+  deck.slides.forEach((slide, index) => {
+    const text = slide.script?.trim();
+    lines.push("----------------------------------------------------------------");
+    lines.push("Slide " + (index + 1) + " / " + deck.slides.length + (text ? ", " + (en ? "about " : "sekitar ") + seconds(text) + (en ? " seconds" : " detik") : ""));
+    lines.push("");
+    lines.push(text ?? (en ? "(No script for this slide.)" : "(Tidak ada naskah untuk slide ini.)"));
+    lines.push("");
+  });
+  return lines.join("\n");
+}
+
 export async function renderDeck(deck: Deck, options: RenderOptions): Promise<void> {
   const client = resolveClient(options.client ?? deck.client);
   const assets = await loadAssets(client, options.deckDir);
@@ -141,6 +167,13 @@ export async function renderDeck(deck: Deck, options: RenderOptions): Promise<vo
   const pdfOut = path.join(options.outDir, file + ".pdf");
   writeFileSync(pdfOut, buffer);
   console.log("Wrote " + relative(pdfOut) + " (" + deck.slides.length + " slides, " + Math.round(buffer.length / 1024) + " KB) for " + client.name);
+
+  const script = scriptText(deck, client);
+  if (script) {
+    const scriptOut = path.join(options.outDir, file + "-script.txt");
+    writeFileSync(scriptOut, script, "utf8");
+    console.log("Wrote " + relative(scriptOut) + " (the speaker script)");
+  }
 
   if (options.preview !== false) {
     const dir = path.join(options.outDir, "preview", file);
@@ -165,6 +198,7 @@ export async function renderDeck(deck: Deck, options: RenderOptions): Promise<vo
       kinds: deck.slides.map((slide) => slide.kind),
       frame: images[deck.slides.length],
       language: deck.meta.language ?? "id",
+      notes: deck.slides.map((slide) => slide.script),
     });
     console.log("Wrote " + relative(written) + " (" + (deck.slides.length + 1) + " slides, the last one blank to duplicate)");
   }

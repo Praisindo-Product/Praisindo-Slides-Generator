@@ -8,6 +8,7 @@ import { SLIDE_H, SLIDE_PADDING_X, SLIDE_W } from "./theme";
  *
  * - content slides get a live slide number where the PDF prints it, so numbering stays right when
  *   slides are added, moved or removed;
+ * - a slide's speaker script, when the deck gives one, is in its notes;
  * - the file carries a slide layout, "Praisindo content", whose background is the header and footer
  *   with a slide number and title placeholders set in the deck's type. New Slide in PowerPoint with
  *   that layout gives a framed slide to fill in by hand. The last slide is one, ready to duplicate.
@@ -30,6 +31,8 @@ export interface PptxInput {
   readonly frame: string;
   /** The deck's language, for the placeholder prompts. */
   readonly language: "id" | "en";
+  /** The speaker script per slide, for the notes pane. */
+  readonly notes?: readonly (string | undefined)[];
 }
 
 /** pptxgenjs takes "image/png;base64,..." without the "data:" scheme. */
@@ -64,6 +67,8 @@ export async function writePptx(input: PptxInput): Promise<string> {
     const slide = pptx.addSlide({ masterName: "Praisindo image" });
     slide.addImage({ data: data(image), x: 0, y: 0, w: inches(SLIDE_W), h: inches(SLIDE_H) });
     if (input.kinds[index] === "content") slide.slideNumber = number;
+    const note = input.notes?.[index]?.trim();
+    if (note) slide.addNotes(note);
   });
   const blank = pptx.addSlide({ masterName: "Praisindo content" });
   blank.addText(prompts.overline, { placeholder: "overline" });

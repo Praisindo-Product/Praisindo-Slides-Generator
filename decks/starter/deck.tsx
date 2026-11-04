@@ -150,12 +150,15 @@ function Closing() {
 export default defineDeck({
   meta: { file: "Praisindo-Starter", title: "Judul presentasi", place: "Jakarta", date: "3 November 2026" },
   client: "praisindo",
+  // `script` is what the presenter says on each slide, in spoken sentences that add to the slide
+  // rather than read it. The build writes it to <file>-script.txt and the PowerPoint speaker notes.
+  // Delete the scripts when the deck needs none.
   slides: [
-    { kind: "dark", Render: Cover },
-    { kind: "content", Render: Summary },
-    { kind: "content", Render: Process },
-    { kind: "content", Render: Comparison },
-    { kind: "content", Render: Statement },
-    { kind: "dark", Render: Closing },
+    { kind: "dark", Render: Cover, script: "Pembuka: siapa kami, untuk siapa presentasi ini, dan apa yang ingin diputuskan di akhir sesi." },
+    { kind: "content", Render: Summary, script: "Inti slide dengan kata-kata lain dari judulnya, lalu satu bukti yang paling penting, lalu peralihan ke slide berikutnya." },
+    { kind: "content", Render: Process, script: "Jelaskan alur langkah demi langkah sambil menunjuk slide. [Petunjuk demo, bila ada]" },
+    { kind: "content", Render: Comparison, script: "Sebutkan keputusan yang dibutuhkan dan siapa yang memutuskan. Bila ditanya detail: lihat lampiran." },
+    { kind: "content", Render: Statement, script: "Arahkan audiens ke satu angka yang penting di tabel; angka lainnya ada di slide untuk dibaca." },
+    { kind: "dark", Render: Closing, script: "Tutup dengan langkah berikutnya dan undang pertanyaan." },
   ],
 });

@@ -40,7 +40,7 @@ export default defineDeck({
 
 | Export | What it is |
 | --- | --- |
-| `defineDeck({ meta, client, slides })` | The deck. `slides` is a list of `{ kind: "content" \| "dark", Render }`. |
+| `defineDeck({ meta, client, slides })` | The deck. `slides` is a list of `{ kind: "content" \| "dark", Render, script? }`; `script` is what the presenter says on that slide. |
 | `meta` | `file` (output name), `title` (printed in every header), `date`, `place?`, `classification?` (default "Rahasia"/"Confidential"), `language?` ("id" default, or "en"). |
 | `client` | A client id from `engine/clients.ts`, or a `defineClient({...})` object. `--client` overrides it. |
 | `defineClient({ id, name, logos?, logoHeight?, whiteOnDark?, palette? })` | A client the deck brings. Logos are paths relative to the deck's folder (`{ light, dark }`); `palette` is `{ primary, secondary, dark: { background, surface, text } }`; anything missing falls back to Praisindo's. |
@@ -93,7 +93,9 @@ new component into `engine/` when it is useful beyond one deck.
 `SLIDE_CONTENT_W` (864), `SLIDE_GAP` (14), `HAIRLINE`, `RADIUS`, `mix(a, b, amount)`.
 
 Type sizes are set: title 22, description 11, card title 12.5, body 10, small 8.5, tables 9 to
-9.5. Do not go below 7.5 for any text a reader needs.
+9.5. Do not go below 7.5 for any text a reader needs. These suit a deck read on a device; a deck
+presented in a room sets body and labels larger inside the frame (`presentation-principles.md`,
+section 6).
 
 ## Build
 
@@ -102,7 +104,9 @@ node engine/build.mjs <deck folder or file> [--pptx] [--client <id>] [--out <fol
 ```
 
 Writes `<deck>/output/<file>.pdf`, previews and contact sheets in `output/preview/<file>/`, and
-with `--pptx` the PowerPoint file. Fails, naming the slide, if any slide runs over one page.
+with `--pptx` the PowerPoint file. When any slide has a `script`, it also writes
+`<deck>/output/<file>-script.txt` (one block per slide with an estimated speaking time at 140 words a
+minute) and puts each slide's script in the PowerPoint speaker notes. Fails, naming the slide, if any slide runs over one page.
 
 ## Limits of the renderer
 

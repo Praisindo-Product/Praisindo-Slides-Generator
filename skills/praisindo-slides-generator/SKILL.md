@@ -33,13 +33,33 @@ npm ci --prefix "ENGINE"
 ## Read first, every time
 
 1. `ENGINE/guides/slide-guidelines.md`: what is fixed in every deck and what is yours to decide.
-2. The worked examples, to calibrate finish and tone (not to copy their structure):
+2. `ENGINE/guides/presentation-principles.md`: how the best decks are built, from consulting practice
+   and research (storyline, action titles, legibility by setting, charts, the speaker script). Principles
+   to decide with, not templates.
+3. The worked examples, to calibrate finish and tone (not to copy their structure):
    `ENGINE/references/README.md` lists them. Open the finished PDFs in `ENGINE/references/` and
    their sources in `ENGINE/decks/`.
-3. `ENGINE/guides/workflow.md`: the steps from request to delivered files.
-4. As needed: `ENGINE/guides/engine.md` (components and build), `ENGINE/guides/clients.md`
+4. `ENGINE/guides/workflow.md`: the steps from request to delivered files.
+5. As needed: `ENGINE/guides/engine.md` (components and build), `ENGINE/guides/clients.md`
    (client brands), `ENGINE/guides/design-system.md` (the full design system; the guide for every
    visual decision), `ENGINE/guides/design-skills/` (general taste, secondary to the above).
+
+## Ask before you build
+
+In one message, before the outline (with the question tool when there is one), ask what the request
+and the material do not already answer. Give your recommended option first.
+
+- **Setting:** presented in a room (projected or on a shared screen) or read on a device (laptop,
+  tablet, sent ahead). It sets type size and density.
+- **When a reference is given** (a deck, a document, notes): build it strictly by the reference, or
+  improve upon it with consulting-grade storylining and research-based principles, with a speaker
+  script in a .txt file.
+- **Script:** whether a speaker script is wanted (included by default when improving).
+- **Only if unclear:** the audience and the decision sought, the time slot, the language, the client.
+
+Whatever the answer, suggest content improvements you see (a missing executive summary, no clear ask,
+weak evidence for a claim). When building strictly by the reference, list them at hand-over instead of
+applying them. `ENGINE/guides/workflow.md` has the detail.
 
 ## Fixed in every deck
 
@@ -66,11 +86,13 @@ Work in the person's current folder; decks go in `decks/<name>/`.
 ```
 node ENGINE/scripts/extract-pptx.mjs <source.pptx>             read a source deck's text
 node ENGINE/scripts/new-deck.mjs <name> [--client <id>]        start decks/<name>/deck.tsx
-node ENGINE/engine/build.mjs decks/<name>                      PDF, previews, contact sheets
+node ENGINE/engine/build.mjs decks/<name>                      PDF, previews, contact sheets, script
 node ENGINE/engine/build.mjs decks/<name> --pptx               also the PowerPoint file
 node ENGINE/engine/build.mjs decks/<name> --pptx --client btn  for another client
 ```
 
 After every build, look at every contact sheet in `decks/<name>/output/preview/<file>/` and fix
-what you see. Hand over the PDF and PowerPoint paths with a short note: what changed from the
-source, what was left out, which figures are illustrative, what you could not verify.
+what you see. Hand over the PDF and PowerPoint paths, and the script (`<file>-script.txt`) when
+there is one, with a short note: what changed from the source, what was left out or moved to the
+appendix, what you added that needs confirming, which figures are illustrative, what you could not
+verify.

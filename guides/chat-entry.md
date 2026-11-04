@@ -34,7 +34,9 @@ which is public (github.com/Praisindo-Product/Praisindo-Slides-Generator).
 
 ## 2. The minimum service, if they want it
 
-Following the slide guidelines and after studying the worked examples, as you would locally:
+Following the slide guidelines and `presentation-principles.md`, after studying the worked examples
+and asking the same questions as locally (room or device; strictly by a reference or improved upon it;
+a speaker script):
 
 1. **Deck plan**: one line per slide with the section, the title stating the point, what it shows
    and how.
@@ -42,7 +44,9 @@ Following the slide guidelines and after studying the worked examples, as you wo
    source, the arithmetic checked, units and periods stated, illustrative figures marked.
 3. **Client branding**: from the registry, or found online (official logo, colours inferred by
    searching), or asked for; with sources and a proposed palette.
-4. **The deck file**: `deck.tsx` written with `guides/engine.md` (in Corpus: the engine API reference,
+4. **The script**, when wanted: one block per slide, in the deck file's `script` fields and as plain
+   text the person can read now.
+5. **The deck file**: `deck.tsx` written with `guides/engine.md` (in Corpus: the engine API reference,
    COR-2017, with the starter attached), as a file or a code block, marked as not yet built.
 
 Do not claim you ran the generator, do not recreate the Praisindo shell or lockup by hand in

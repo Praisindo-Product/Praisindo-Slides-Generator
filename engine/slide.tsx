@@ -32,6 +32,8 @@ export interface DeckMeta {
 export interface DeckSlide {
   readonly kind: "content" | "dark";
   readonly Render: () => React.ReactElement;
+  /** What the presenter says on this slide. Written to <file>-script.txt beside the PDF and to the PowerPoint speaker notes. */
+  readonly script?: string;
 }
 
 export interface Deck {
