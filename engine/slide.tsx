@@ -58,6 +58,8 @@ export interface Logo {
 
 export interface DeckAssets {
   readonly praisindo: Logo;
+  /** The mark for dark slides, its swooshes filled white within the tile as on paper. */
+  readonly praisindoDark: Logo;
   /** The Censof wordmark for "a censof company": its purple for white paper, white for dark slides. */
   readonly censof: { readonly light: Logo; readonly dark: Logo };
   readonly client?: { readonly light: Logo; readonly dark: Logo };
@@ -156,9 +158,8 @@ export function PraisindoLockup({ height, dark }: { height: number; dark?: boole
     <View>
       <View style={{ flexDirection: "row", alignItems: "flex-start", gap: height * 0.28 }}>
         <View style={{ width: markWidth, height }}>
-          {/* The mark's swooshes are cut out of the tile; on a dark slide they are filled white, as on paper. */}
-          {dark ? <View style={{ position: "absolute", left: height * 0.04, top: height * 0.04, width: markWidth - height * 0.08, height: height * 0.92, backgroundColor: "#ffffff", borderRadius: height * 0.06 }} /> : null}
-          <LogoImage logo={assets.praisindo} height={height} />
+          {/* On a dark slide the swooshes, cut out of the tile, are filled white as on paper (engine/render.tsx). */}
+          <LogoImage logo={dark ? assets.praisindoDark : assets.praisindo} height={height} />
         </View>
         <View style={{ marginTop: height * 0.8 - name }}>
           <PraisindoName height={name} color={dark ? "#ffffff" : PRAISINDO_NAVY} />

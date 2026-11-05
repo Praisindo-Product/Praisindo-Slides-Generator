@@ -68,9 +68,30 @@ async function clientLogos(client: ClientBrand, deckDir: string): Promise<DeckAs
   }
 }
 
+/**
+ * The Praisindo mark for dark slides. Its swooshes are cut out of the blue tile, so on a dark slide
+ * they are filled white, as on paper: a white tile of the mark's own size and corner radius is laid
+ * beneath it, a pixel and a half inside the edge so the tile's antialiased rim keeps no white fringe.
+ * The radius is measured from the artwork (where the top row turns opaque).
+ */
+async function praisindoOnDark(file: string): Promise<Logo> {
+  const png = await sharp(file, { density: 300 }).trim().resize({ height: 240 }).png().toBuffer();
+  const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  let radius = 0;
+  while (radius < info.width / 2 && data[radius * 4 + 3] < 128) radius += 1;
+  const inset = 1.5;
+  const tile = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${info.width}" height="${info.height}"><rect x="${inset}" y="${inset}" width="${info.width - inset * 2}" height="${info.height - inset * 2}" rx="${Math.max(0, radius - inset)}" fill="#ffffff"/></svg>`,
+  );
+  const filled = await sharp(tile).composite([{ input: png }]).png().toBuffer();
+  return { src: "data:image/png;base64," + filled.toString("base64"), ratio: info.width / info.height };
+}
+
 async function loadAssets(client: ClientBrand, deckDir: string): Promise<DeckAssets> {
+  const mark = path.join(ROOT, "brand/praisindo-logo.svg");
   return {
-    praisindo: await logo(path.join(ROOT, "brand/praisindo-logo.svg")),
+    praisindo: await logo(mark),
+    praisindoDark: await praisindoOnDark(mark),
     censof: { light: await censof("#7030a0"), dark: await censof("#ffffff") },
     client: await clientLogos(client, deckDir),
   };
