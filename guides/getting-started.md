@@ -71,20 +71,30 @@ check still fails.
 
 ENGINE is the folder that holds `engine/build.mjs` and `skills/praisindo-slides-generator/SKILL.md`.
 
-1. **Already here?** Look in the current folder, then `~/Praisindo-Slides-Generator`. If the Claude
-   Code plugin `praisindo-slides-generator` is installed, its folder is ENGINE.
-2. **Present: update it.** In a clone, `git -C ENGINE pull --ff-only` so the person gets the
-   current version. If the pull fails because of local changes, leave them alone and say so; build
-   with what is there. For the plugin: `claude plugin marketplace update praisindo`, then
-   `claude plugin update praisindo-slides-generator@praisindo`.
+1. **Already here?** Look in the current folder, then `~/Praisindo-Slides-Generator`, then
+   `~/Praisindo-Slides-Generator-install/Praisindo-Slides-Generator` (an install from the Corpus
+   archive). If the Claude Code plugin `praisindo-slides-generator` is installed, its folder is
+   ENGINE.
+2. **Present: update it.**
+   - A clone (it has a `.git` folder): `git -C ENGINE pull --ff-only`. If the pull fails because of
+     local changes, leave them alone and say so; build with what is there.
+   - An archive install (no `.git` folder): compare `version` in `ENGINE/package.json` with the
+     newest archive on COR-2009; if Corpus has a newer one, unpack it beside the old folder and use
+     that. Better still, when GitHub is reachable, clone it as in step 3 and use the clone from now on.
+   - The plugin: `claude plugin marketplace update praisindo`, then
+     `claude plugin update praisindo-slides-generator@praisindo`.
 3. **Not present: clone it** into the person's home folder (ask first if they want another place):
    ```
    git clone https://github.com/Praisindo-Product/Praisindo-Slides-Generator.git ~/Praisindo-Slides-Generator
    ```
-   The repository is public; no GitHub account is needed.
-4. **GitHub unreachable:** download the newest `praisindo-slides-generator-<version>.tar.gz` from
-   Corpus, "Praisindo Slides Generator: engine package" (COR-2009), with `corpus.attachments`, and
-   unpack it into the home folder (Windows Git Bash: `tar --force-local -xzf <file>`).
+   The repository is public: no GitHub account, sign-in or token is needed (tested with every
+   credential turned off).
+4. **GitHub unreachable:** call `corpus.attachments` on "Praisindo Slides Generator: engine package"
+   (COR-2009). Older versions may still be attached and may be listed first: take the file with the
+   **highest version number** in its name, not the first one listed. Download it with its
+   `download_url` (valid one hour) and unpack it into `~/Praisindo-Slides-Generator-install`
+   (Windows: `tar --force-local -xzf <file>`; `curl` and `tar` come with Windows 10 and later, so Git
+   is not needed for this route). This route needs the Praisindo connector signed in, not GitHub.
 
 Then install the packages and check the build:
 
