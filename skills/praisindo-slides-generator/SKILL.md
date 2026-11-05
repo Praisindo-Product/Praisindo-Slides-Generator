@@ -16,6 +16,13 @@ with this repository). In a general chat the generator cannot run; follow
 `guides/chat-entry.md` (Corpus COR-2016): say it runs locally and how to set it up, and if the
 person insists, give the minimum service (plan, content, branding, a `deck.tsx` to build later).
 
+## Starting from nothing
+
+When the person has set nothing up ("Halo, tolong cek corpus untuk slides generator. Saya mau buat
+slide ..."), follow `ENGINE/guides/getting-started.md` (Corpus skill COR-2014 carries the same
+steps): check Node.js and Git, clone or update the engine, `npm ci`, check the build, then make the
+deck they asked for in the same conversation, without making them ask again.
+
 ## Where the engine is
 
 ENGINE is `${CLAUDE_PLUGIN_ROOT}` when this skill runs from the installed plugin. If that text is
@@ -28,7 +35,11 @@ Before the first build, make sure the engine's packages are installed:
 npm ci --prefix "ENGINE"
 ```
 
-(Skip it when `ENGINE/node_modules/@react-pdf` exists. Node 20.19 or later is required.)
+(Skip it when `ENGINE/node_modules/@react-pdf` exists. Node 20.19 or later is required.) In a
+clone, `git -C ENGINE pull --ff-only` first, so the person builds with the current version.
+
+The repository is public. Never commit or push a client deck, its logos or its outputs unless the
+person says it may be public.
 
 ## Read first, every time
 

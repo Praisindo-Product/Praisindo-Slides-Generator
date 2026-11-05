@@ -15,8 +15,9 @@ When someone asks for a deck, slides or a presentation, read
   (`make-wordmark.mjs` regenerates them), and client logos.
 - `fonts/`: Libre Franklin and Fraunces, with their licences.
 - `decks/`: the starter and the worked examples. `references/`: finished files to study.
-- `guides/`: slide guidelines, presentation principles (consulting and research-based practice),
-  workflow, engine and client references, the design system, and general design skills.
+- `guides/`: getting started from nothing, slide guidelines, presentation principles (consulting
+  and research-based practice), workflow, engine and client references, the design system, and
+  general design skills.
 
 After changing the engine: `npm run typecheck` and `npm run examples`, then look at the contact
 sheets. Keep `guides/engine.md` in step with what the engine exports. The shell (header, footer,
@@ -26,5 +27,7 @@ person responsible for the brand asks.
 ## Rules for this repository
 
 - Commit or push only when asked.
+- The repository is public. Client decks, their logos and outputs stay out of git unless the person
+  says they may be public.
 - Client palettes follow the institution presets in WMS-IMS Ultimate; keep them in step.
 - No em dashes or middle dots in any copy or documentation.

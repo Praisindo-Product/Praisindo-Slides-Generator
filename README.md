@@ -61,11 +61,16 @@ claude
 
 `CLAUDE.md` points Claude to the skill, so no install is needed when you work inside the clone.
 
-### Option 3: from Corpus
+### Option 3: from Corpus, with nothing set up
 
-Ask Claude, with the Praisindo connector enabled: "fetch corpus for the slides generator skills".
-The Corpus skill sets up the generator (cloning or unpacking it and installing packages) and then
-works as above.
+In Claude Code with the Praisindo connector enabled, just ask for what you need:
+
+> Halo, tolong cek corpus untuk slides generator. Saya mau buat slide tentang ...
+
+The agent loads the `praisindo-slides-generator` skill from Corpus, checks Node.js and Git (and
+tells you the command if one is missing), clones this repository into your home folder or updates
+it, installs its packages, checks the build, and then makes the deck you asked for. The steps it
+follows are in `guides/getting-started.md`.
 
 ## Using it
 
