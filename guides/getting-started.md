@@ -69,6 +69,10 @@ check still fails.
 
 ## 4. Get the engine, or update it
 
+Updating is not optional: every deck request starts by bringing ENGINE and its instructions to the
+latest published version (`skills/praisindo-slides-generator/SKILL.md`, "First, every time: work from
+the latest instructions"). Never build from a copy you have not checked against the remote.
+
 ENGINE is the folder that holds `engine/build.mjs` and `skills/praisindo-slides-generator/SKILL.md`.
 
 1. **Already here?** Look in the current folder, then `~/Praisindo-Slides-Generator`, then
@@ -137,4 +141,6 @@ This repository is **public**. A client deck usually is not.
 ## 7. Next time
 
 The person can ask directly in Claude Code, from any folder: "buatkan deck untuk ...". The agent
-finds ENGINE as in step 4, updates it, and goes straight to step 5.
+finds ENGINE as in step 4, checks it against the remote and updates it (or reads the latest
+instructions from the remote when it cannot update), re-reads the instructions, and goes straight to
+step 5.

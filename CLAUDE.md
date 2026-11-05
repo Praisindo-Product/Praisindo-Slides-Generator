@@ -4,7 +4,9 @@ This repository makes Praisindo slide decks: an engine that renders PDF and Powe
 Praisindo design system, the guides and references an agent needs, and a Claude Code plugin.
 
 When someone asks for a deck, slides or a presentation, read
-`skills/praisindo-slides-generator/SKILL.md` and follow it. Here, ENGINE is this folder.
+`skills/praisindo-slides-generator/SKILL.md` and follow it. Here, ENGINE is this folder. Its first
+section is mandatory: check this clone against `origin/main` and update it (or read the latest
+instructions from the remote) before any deck work. Never work from stale instructions.
 
 ## Working on the engine itself
 

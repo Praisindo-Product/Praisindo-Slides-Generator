@@ -9,6 +9,51 @@ You make decks with a TypeScript slide engine that renders PDF and PowerPoint in
 document language. Every deck shares a fixed shell and look; what goes inside is designed for its
 content.
 
+## First, every time: work from the latest instructions
+
+Mandatory, before anything else in this skill: on every new deck request, and again when a
+conversation resumes after a break, make sure the instructions and the engine are the latest
+published version. Never work from stale instructions, including a copy you read earlier in the
+conversation or remember from another one. Only skip this if the person explicitly tells you not to
+update.
+
+1. **Find how ENGINE was installed** (see "Where the engine is" below, and
+   `ENGINE/guides/getting-started.md` for a machine with nothing set up).
+2. **A clone (ENGINE has a `.git` folder):** check the remote, then update.
+   ```
+   git -C ENGINE fetch --quiet origin main
+   git -C ENGINE rev-parse --short HEAD origin/main
+   ```
+   - The same commit: current. Carry on.
+   - Behind: note the old commit, then `git -C ENGINE pull --ff-only origin main`. If
+     `git -C ENGINE diff --name-only <old> HEAD -- package-lock.json` lists the lockfile, run
+     `npm ci --prefix ENGINE` again. Then **read this file again from the start**: what you read
+     before the pull is stale.
+   - The pull is refused (local changes to files the update touches, another branch, or a diverged
+     history): never discard, reset, stash or switch branches without the person's yes. Read the
+     latest instructions straight from the remote and follow those:
+     `git -C ENGINE show origin/main:skills/praisindo-slides-generator/SKILL.md`, and the same for
+     every guide you use (`origin/main:guides/<name>.md`). Tell the person their copy is behind and
+     what blocks the update, and offer to update it (for example stash, pull, stash pop) on their
+     yes. If the latest instructions rely on an engine feature their local copy lacks, say so before
+     building.
+3. **The plugin (ENGINE is `${CLAUDE_PLUGIN_ROOT}`):** `claude plugin marketplace update praisindo`,
+   then `claude plugin update praisindo-slides-generator@praisindo`, then read this file again from
+   ENGINE. If the update cannot run, read the latest instructions from GitHub instead:
+   `curl -fsSL https://raw.githubusercontent.com/Praisindo-Product/Praisindo-Slides-Generator/main/skills/praisindo-slides-generator/SKILL.md`
+   (and `.../main/guides/<name>.md`).
+4. **An archive install (no `.git` folder, usually `~/Praisindo-Slides-Generator-install/...`):**
+   compare `version` in `ENGINE/package.json` with the highest version attached to Corpus COR-2009.
+   If Corpus has a newer one, download and unpack it and use it. If Git and GitHub are available,
+   clone the repository instead and use the clone from then on.
+5. **Coming from Corpus:** load the skill with `skill.get praisindo-slides-generator` at the start of
+   each deck request, never from memory. Once ENGINE is current, this file is the authority; where
+   Corpus and the repository differ, the repository wins.
+6. **Offline, or the remote cannot be reached:** carry on with the local copy, and tell the person
+   which commit or version you are using and that you could not check for a newer one.
+
+Then say in one line what you are working from, for example "Generator up to date (commit a7c082c)".
+
 ## Where you are running
 
 This skill needs Claude Code: a shell and files on the person's computer (or Claude Code on the web
@@ -35,8 +80,8 @@ Before the first build, make sure the engine's packages are installed:
 npm ci --prefix "ENGINE"
 ```
 
-(Skip it when `ENGINE/node_modules/@react-pdf` exists. Node 20.19 or later is required.) In a
-clone, `git -C ENGINE pull --ff-only` first, so the person builds with the current version.
+(Skip it when `ENGINE/node_modules/@react-pdf` exists and the lockfile did not change in an update.
+Node 20.19 or later is required.) Updating comes first: "First, every time" above.
 
 The repository is public. Never commit or push a client deck, its logos or its outputs unless the
 person says it may be public.
