@@ -142,6 +142,28 @@ three seconds: if you cannot say what it claims, the title is weak or the body c
 - **Device or pre-read:** the slide must explain itself, because nobody is there to explain it. More
   words are acceptable, in full sentences, still one point per slide, still scannable.
 
+### Concise copy
+
+When you write a deck from scratch or improve upon a reference, write less. Every word on a slide
+competes for the viewer's attention; the words that are not needed make the ones that are harder to
+find. (When building strictly by a reference, keep its wording and list these edits as suggestions.)
+
+- **Say it once, in the fewest words that keep the meaning.** Short sentences and fragments, concrete
+  verbs, numbers instead of adjectives. "Fee posted to the GL daily" rather than "The system ensures
+  that fees are seamlessly posted to the general ledger on a daily basis".
+- **Ask of every item: would the viewer miss it?** If not, cut it. If only someone might ask about it,
+  move it to the appendix or the script. Keep what the viewer needs to understand the point or to
+  decide.
+- **Cut, as a rule:** preambles ("This slide shows..."), a body line that repeats the title, adjectives
+  and claims with no fact behind them, hedges, internal jargon the viewer does not use, process
+  narration the viewer does not act on, and examples that add no new information.
+- **One idea per bullet, one level of bullets**, parallel in form, about two lines at most. A list of
+  more than five items is usually two slides or a table.
+- **Never cut for brevity what changes the meaning:** numbers, units, conditions, exceptions, controls,
+  owners and dates stay exact. Precision beats brevity when they conflict.
+- **Say what you cut.** At hand-over, list what you omitted and what you moved to the appendix, so the
+  person can put back anything they need.
+
 ## 4. How people take in slides (the research)
 
 Use these findings to make judgement calls. Effects vary with the audience and the material; they are
@@ -350,7 +372,8 @@ it.
 
 **Improve upon it.** Rebuild the storyline with these principles: answer first, action titles,
 horizontal and vertical logic, one message per slide, main story and appendix, the ask at the end. Write
-the speaker script. Keep every fact and figure; move detail to the appendix rather than dropping it.
+the speaker script. Write the copy concisely (section 3, Concise copy): keep every fact the viewer
+needs, move supporting detail to the appendix, and omit what no viewer needs.
 Never invent data, clients, quotes or commitments; when the storyline needs something the source does
 not have (an owner, a date, a decision), propose it as a question to agree and mark it as proposed. At
 hand-over, list what changed in the structure, what moved to the appendix, what you added and that it
@@ -364,6 +387,7 @@ In both cases, apply the setting (room or device) to type and density.
 - [ ] Read alone, the titles tell the story (horizontal logic).
 - [ ] Every slide makes one point, and its body supports only that point (vertical logic).
 - [ ] Titles are full-sentence claims the evidence supports.
+- [ ] The copy is concise: nothing the viewer would not miss; omissions are listed at hand-over.
 - [ ] Each slide passes the three-second glance test.
 - [ ] Type and density suit the setting (room or device); nothing a reader needs falls below the
       setting's minimum.

@@ -72,6 +72,15 @@ Whatever the answer, suggest content improvements you see (a missing executive s
 weak evidence for a claim). When building strictly by the reference, list them at hand-over instead of
 applying them. `ENGINE/guides/workflow.md` has the detail.
 
+## Write concisely
+
+When writing a deck from scratch or improving a reference, keep the copy short and straightforward:
+say each thing once in the fewest words that keep the meaning, and omit what the viewer would not
+miss (move what someone might ask about to the appendix or the script). Numbers, conditions, controls,
+owners and dates stay exact. List what you omitted at hand-over. When building strictly by a
+reference, keep its wording and suggest these cuts instead. `ENGINE/guides/presentation-principles.md`,
+section 3, has the detail.
+
 ## Fixed in every deck
 
 - The slide shell: `Slide` for content (header with the Praisindo lockup, deck title and client

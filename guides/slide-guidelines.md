@@ -54,8 +54,10 @@ content genuinely has the same shape.
 
 ## Quality, whatever the layout
 
-- **Content first.** Keep every fact and figure the source carries; shorten words, not facts. If
-  something is left out, say so to the person you are working with.
+- **Content first.** Keep every fact and figure the viewer needs, exactly. When writing from scratch
+  or improving a reference, write concisely and omit what the viewer would not miss (the appendix or
+  the script takes what someone might ask about); `presentation-principles.md`, section 3, Concise
+  copy. Say what you left out to the person you are working with.
 - **Say the point.** A slide's title tells the reader what to take away. The overline, if used,
   names the section in sentence case.
 - **Plain language.** Write like a product, not a pitch: real names, concrete verbs, no filler or
